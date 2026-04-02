@@ -1,28 +1,23 @@
-# Librării (cea mai importantă linie)
+
 node_modules/
 
-# Build & Dist (codul compilat)
 dist/
 build/
 .cache/
 
-# Secrete & Configurații locale
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# Log-uri de erori
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Fișiere de sistem (junk)
 .DS_Store
 Thumbs.db
 
-# Setări de editor (opțional)
 .vscode/
 .idea/
