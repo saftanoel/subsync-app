@@ -56,7 +56,9 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">{s.label}</p>
-                <p className={`font-display text-lg font-bold ${s.color}`}>{s.value}</p>
+                <p className={`font-display text-lg font-bold ${s.color} ${s.label === "Monthly Spend" ? "total-amount" : ""}`}>
+                  {s.value}
+                </p>
               </div>
             </div>
           </motion.div>
