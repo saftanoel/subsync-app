@@ -1,12 +1,14 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react"; // Am scos Monitor că nu era folosit
+import { LogOut } from "lucide-react";
 import { motion } from "framer-motion";
+import { ThemeToggle } from "@/components/ThemeToggle"
 
 export function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const navLinks = isAuthenticated
     ? [
@@ -18,6 +20,19 @@ export function Navbar() {
       { to: "/login", label: "Login" },
     ];
 
+  // Logica inteligentă pentru apăsarea pe logo
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    if (location.pathname === "/") {
+      // Hard refresh dacă suntem deja pe pagina principală (declanșează și Loading Screen-ul)
+      window.location.reload();
+    } else {
+      // Navigare fină spre pagina principală dacă suntem oriunde altundeva
+      navigate("/");
+    }
+  };
+
   return (
     <motion.nav
       initial={{ y: -20, opacity: 0 }}
@@ -25,15 +40,20 @@ export function Navbar() {
       className="glass sticky top-0 z-50 border-b border-border"
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        {/* Logo cu hover discret */}
+
+        {/* Logo cu hover discret și logica de refresh */}
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          <Link to="/" className="flex items-center gap-2">
+          <a href="/" onClick={handleLogoClick} className="flex items-center gap-2 cursor-pointer">
             <img src="/logo.png" alt="SubSync Logo" className="h-12 w-12 object-contain relative top-[2px]" />
             <span className="font-display text-xl font-bold gradient-text">SubSync</span>
-          </Link>
+          </a>
         </motion.div>
 
         <div className="flex items-center gap-6">
+
+          {/* Butonul de Dark / Light Mode */}
+          <ThemeToggle />
+
           {/* Link-urile de navigare cu salt (lift-up) */}
           {navLinks.map(link => (
             <motion.div
@@ -51,6 +71,7 @@ export function Navbar() {
             </motion.div>
           ))}
 
+          {/* Secțiunea de Autentificare */}
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
               <span className="text-sm text-muted-foreground">
