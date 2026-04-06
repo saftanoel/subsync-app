@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, fireEvent } from "@testing-library/react";
+import { screen } from "@testing-library/dom";
 import { BrowserRouter } from "react-router-dom";
 import { SubscriptionProvider, useSubscriptions } from "@/contexts/SubscriptionContext";
 
@@ -255,7 +256,7 @@ describe("Subscription CRUD Operations", () => {
 describe("useSubscriptions hook", () => {
   it("should throw error when used outside provider", () => {
     // Suppress console.error for expected error
-    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const spy = vi.spyOn(console, "error").mockImplementation(() => { });
     expect(() => {
       function BadComponent() {
         useSubscriptions();

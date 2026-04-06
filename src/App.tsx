@@ -37,17 +37,19 @@ function AppRoutes() {
 }
 
 const App = () => {
-  const [isLoading, setIsLoading] = useState(true);
+  // Verificăm DIRECT la pornirea aplicației dacă rulăm un test. 
+  // Dacă da, pornim cu isLoading pe FALSE, deci loader-ul NU va fi randat absolut deloc (zero delay).
+  const [isLoading, setIsLoading] = useState(() => {
+    return sessionStorage.getItem("skipLoader") !== "true";
+  });
 
-  //listening to the themeToggle event
+  // Ascultăm evenimentul pentru toggle day/night mode
   useEffect(() => {
     const handleTriggerLoader = () => {
       setIsLoading(true);
     };
 
     window.addEventListener("triggerLoader", handleTriggerLoader);
-
-    //cleanup
     return () => window.removeEventListener("triggerLoader", handleTriggerLoader);
   }, []);
 
@@ -59,6 +61,7 @@ const App = () => {
         <BrowserRouter>
           <AuthProvider>
             <SubscriptionProvider>
+
               <AnimatePresence>
                 {isLoading && (
                   <InitialLoader onComplete={() => setIsLoading(false)} />
@@ -67,6 +70,7 @@ const App = () => {
 
               <Navbar />
               <AppRoutes />
+
             </SubscriptionProvider>
           </AuthProvider>
         </BrowserRouter>
