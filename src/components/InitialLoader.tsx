@@ -3,7 +3,13 @@ import { motion } from "framer-motion";
 
 export function InitialLoader({ onComplete }: { onComplete: () => void }) {
     useEffect(() => {
-        // Va rula exact 1,5s (1500 milisecunde)
+        // Bypass pentru testele Playwright (sare peste ecranul de încărcare)
+        if (sessionStorage.getItem("skipLoader") === "true") {
+            onComplete();
+            return; // Oprește execuția aici, nu mai declanșează timeout-ul
+        }
+
+        // Va rula exact 1s (1000 milisecunde) pe site-ul real
         const timer = setTimeout(() => {
             onComplete();
         }, 1000);
