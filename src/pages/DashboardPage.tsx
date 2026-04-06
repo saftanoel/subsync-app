@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSubscriptions } from "@/contexts/SubscriptionContext";
 import { SubscriptionTable } from "@/components/SubscriptionTable";
 import { StatsCharts } from "@/components/StatsCharts";
@@ -29,6 +29,14 @@ export default function DashboardPage() {
     { icon: TrendingUp, label: "Avg Rating", value: `${avgRating.toFixed(1)} / 5`, color: "text-chart-4" },
     { icon: CreditCard, label: "Active Subs", value: String(subscriptions.length), color: "text-chart-3" },
   ];
+
+  useEffect(() => {
+    // Setează cookie-urile cerute de testul Playwright
+    document.cookie = "user-activity=active; path=/; max-age=86400"; // Expiră în 24h
+    document.cookie = "preferences=dark-mode; path=/; max-age=86400";
+
+    console.log("Cookies have been set for Silver Challenge");
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-6">
