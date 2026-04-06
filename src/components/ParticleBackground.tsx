@@ -9,10 +9,6 @@ export function ParticleBackground() {
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        let particlesArray: Particle[] = [];
-        let animationFrameId: number;
-
-        // Redimensionare canvas
         const setCanvasSize = () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -20,7 +16,6 @@ export function ParticleBackground() {
         setCanvasSize();
         window.addEventListener('resize', setCanvasSize);
 
-        // Urmărim mouse-ul (îl punem inițial în afara ecranului)
         const mouse = { x: -1000, y: -1000, radius: 150 };
 
         const handleMouseMove = (e: MouseEvent) => {
@@ -29,32 +24,44 @@ export function ParticleBackground() {
         };
         window.addEventListener('mousemove', handleMouseMove);
 
-        // Când mouse-ul iese de pe fereastră, particulele revin la normal
         window.addEventListener('mouseout', () => {
             mouse.x = -1000;
             mouse.y = -1000;
         });
 
-        // Clasa care definește o singură particulă
         class Particle {
             x: number;
             y: number;
+            baseX: number; // Ancora X
+            baseY: number; // Ancora Y
+            vx: number; // Viteza de plutire
+            vy: number; // Viteza de plutire
             size: number;
-            baseX: number;
-            baseY: number;
             density: number;
             color: string;
 
-            constructor(x: number, y: number) {
-                this.x = x;
-                this.y = y;
-                this.baseX = x;
-                this.baseY = y;
-                this.size = Math.random() * 2 + 1;
-                this.density = Math.random() * 30 + 1; // Viteza de "fugă"
+            constructor(canvasWidth: number, canvasHeight: number) {
+                // Ancora inițială pe ecran
+                this.baseX = Math.random() * canvasWidth;
+                this.baseY = Math.random() * canvasHeight;
 
-                // Culori subtile (mov, albastru neon, alb)
-                const colors = ['rgba(168, 85, 247, 0.5)', 'rgba(59, 130, 246, 0.5)', 'rgba(255, 255, 255, 0.3)'];
+                // Particula stă pe ancoră la început
+                this.x = this.baseX;
+                this.y = this.baseY;
+
+                // Viteza de plutire lentă și continuă
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+
+                this.size = Math.random() * 2 + 1;
+                this.density = Math.random() * 20 + 5;
+
+                const colors = [
+                    'rgba(0, 255, 128, 0.4)',
+                    'rgba(0, 255, 128, 0.15)',
+                    'rgba(255, 255, 255, 0.3)',
+                    'rgba(148, 163, 184, 0.2)'
+                ];
                 this.color = colors[Math.floor(Math.random() * colors.length)];
             }
 
@@ -67,82 +74,64 @@ export function ParticleBackground() {
                 ctx.fill();
             }
 
-            update() {
-                // Logica antigravity: fuge de mouse
+            update(canvasWidth: number, canvasHeight: number) {
+                // 1. Ancora plutește constant!
+                this.baseX += this.vx;
+                this.baseY += this.vy;
+
+                // Teleportăm ancora dacă iese de pe ecran
+                if (this.baseX > canvasWidth) { this.baseX = 0; this.x = 0; }
+                else if (this.baseX < 0) { this.baseX = canvasWidth; this.x = canvasWidth; }
+
+                if (this.baseY > canvasHeight) { this.baseY = 0; this.y = 0; }
+                else if (this.baseY < 0) { this.baseY = canvasHeight; this.y = canvasHeight; }
+
+                // 2. Interacțiunea cu mouse-ul
                 const dx = mouse.x - this.x;
                 const dy = mouse.y - this.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
-                const forceDirectionX = dx / distance;
-                const forceDirectionY = dy / distance;
-                const maxDistance = mouse.radius;
-                const force = (maxDistance - distance) / maxDistance;
-                const directionX = forceDirectionX * force * this.density;
-                const directionY = forceDirectionY * force * this.density;
-
                 if (distance < mouse.radius) {
-                    this.x -= directionX;
-                    this.y -= directionY;
-                } else {
-                    // Revine la poziția inițială cu efect de elastic
-                    if (this.x !== this.baseX) {
-                        const dx = this.x - this.baseX;
-                        this.x -= dx / 15;
-                    }
-                    if (this.y !== this.baseY) {
-                        const dy = this.y - this.baseY;
-                        this.y -= dy / 15;
-                    }
+                    // O împingem departe
+                    const forceDirectionX = dx / distance;
+                    const forceDirectionY = dy / distance;
+                    const force = (mouse.radius - distance) / mouse.radius;
+
+                    const pushX = forceDirectionX * force * this.density;
+                    const pushY = forceDirectionY * force * this.density;
+
+                    this.x -= pushX;
+                    this.y -= pushY;
                 }
+
+                // 3. Elasticitatea: Particula este mereu trasă înapoi spre ancora ei (care plutește)
+                this.x += (this.baseX - this.x) * 0.03;
+                this.y += (this.baseY - this.y) * 0.03;
             }
         }
 
-        // Generăm particulele
+        let particleArray: Particle[] = [];
         const init = () => {
-            particlesArray = [];
-            const numberOfParticles = (canvas.width * canvas.height) / 9000; // Mai multe sau mai puține în funcție de ecran
+            particleArray = [];
+            //densitatea particulelor /2000
+            const numberOfParticles = (canvas.width * canvas.height) / 1650;
             for (let i = 0; i < numberOfParticles; i++) {
-                const x = Math.random() * canvas.width;
-                const y = Math.random() * canvas.height;
-                particlesArray.push(new Particle(x, y));
+                particleArray.push(new Particle(canvas.width, canvas.height));
             }
         };
         init();
 
-        // Creăm liniile "neuronale" între particule
-        const connect = () => {
-            for (let a = 0; a < particlesArray.length; a++) {
-                for (let b = a; b < particlesArray.length; b++) {
-                    const dx = particlesArray[a].x - particlesArray[b].x;
-                    const dy = particlesArray[a].y - particlesArray[b].y;
-                    const distance = dx * dx + dy * dy;
-
-                    if (distance < 12000) {
-                        const opacityValue = 1 - distance / 12000;
-                        ctx!.strokeStyle = `rgba(168, 85, 247, ${opacityValue * 0.2})`; // Linii mov transparente
-                        ctx!.lineWidth = 1;
-                        ctx!.beginPath();
-                        ctx!.moveTo(particlesArray[a].x, particlesArray[a].y);
-                        ctx!.lineTo(particlesArray[b].x, particlesArray[b].y);
-                        ctx!.stroke();
-                    }
-                }
-            }
-        };
-
-        // Bucla de animație
+        let animationFrameId: number;
         const animate = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < particlesArray.length; i++) {
-                particlesArray[i].update();
-                particlesArray[i].draw();
+            for (let i = 0; i < particleArray.length; i++) {
+                particleArray[i].update(canvas.width, canvas.height);
+                particleArray[i].draw();
             }
-            connect();
             animationFrameId = requestAnimationFrame(animate);
         };
         animate();
 
-        // Cleanup la demontarea componentei
         return () => {
             window.removeEventListener('resize', setCanvasSize);
             window.removeEventListener('mousemove', handleMouseMove);
