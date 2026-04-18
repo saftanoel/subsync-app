@@ -247,8 +247,10 @@ describe("Subscription CRUD Operations", () => {
     });
 
     it("should reject rating outside 1-5 range", () => {
-      expect(0 >= 1 && 0 <= 5).toBe(false);
-      expect(6 >= 1 && 6 <= 5).toBe(false);
+      const lowRating = 0;
+      const highRating = 6;
+      expect(lowRating >= 1 && lowRating <= 5).toBe(false);
+      expect(highRating >= 1 && highRating <= 5).toBe(false);
     });
   });
 });
