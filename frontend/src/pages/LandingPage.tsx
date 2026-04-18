@@ -20,7 +20,7 @@ export default function LandingPage() {
 
       {/* Magia Antigravity în fundal */}
       <ParticleBackground />
-
+ 
       {/* Tot conținutul de mai jos primește z-10 ca să stea deasupra particulelor și să poată primi click-uri */}
       <div className="relative z-10">
         {/* Hero */}
