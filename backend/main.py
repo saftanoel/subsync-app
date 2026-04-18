@@ -65,7 +65,7 @@ def get_subscription(sub_id: str):
 @app.post("/subscriptions", response_model=Subscription, status_code=201)
 def create_subscription(sub_in: SubscriptionCreate):
     """Crează o subscripție nouă."""
-    new_sub = Subscription(id=str(uuid4()), **sub_in.dict())
+    new_sub = Subscription(id=str(uuid4()), **sub_in.model_dump())
     db_subscriptions.append(new_sub)
     return new_sub
 
@@ -74,8 +74,8 @@ def update_subscription(sub_id: str, sub_in: SubscriptionUpdate):
     """Actualizează o subscripție existentă."""
     for i, sub in enumerate(db_subscriptions):
         if sub.id == sub_id:
-            updated_data = sub.dict()
-            update_data = sub_in.dict(exclude_unset=True)
+            updated_data = sub.model_dump()
+            update_data = sub_in.model_dump(exclude_unset=True)
             updated_data.update(update_data)
             
             db_subscriptions[i] = Subscription(**updated_data)
