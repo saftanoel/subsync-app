@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import Cookies from "js-cookie";
 import type { Subscription } from "@/types/subscription";
-import { toast } from "sonner"; // Presupunând că folosești Sonner din proiectul tău
+import { toast } from "sonner"; 
 
 interface SubscriptionContextType {
   subscriptions: Subscription[];
@@ -17,67 +17,111 @@ interface SubscriptionContextType {
 const SubscriptionContext = createContext<SubscriptionContextType | null>(null);
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
-  // 1. Încărcăm datele din LocalStorage la început (dacă există)
   const [subscriptions, setSubscriptions] = useState<Subscription[]>(() => {
     const saved = localStorage.getItem("subsync_data");
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState(true);
   const [sortColumn, setSortColumnState] = useState<string>(() => Cookies.get("subsync_sort") || "serviceName");
 
-  // Salvare automată în LocalStorage ori de câte ori se schimbă lista
+  // Salvare permanentă în LocalStorage
   useEffect(() => {
     localStorage.setItem("subsync_data", JSON.stringify(subscriptions));
   }, [subscriptions]);
 
-  useEffect(() => {
-    // Detectăm starea internetului browser-ului
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+  // Data sync function - aduce datele de pe sv si le combina cu ce avem local (daca e cazul)
+  const syncWithServer = useCallback(async () => {
+    try {
+      const res = await fetch("http://127.0.0.1:8000/subscriptions?limit=100");
+      if (!res.ok) throw new Error("Server unreachable");
+      
+      const serverData: Subscription[] = await res.json();
+      const savedData = localStorage.getItem("subsync_data");
+      
+      let finalData = [...serverData];
 
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
+      if (savedData) {
+        const localData: Subscription[] = JSON.parse(savedData);
+        
+        // Căutăm elementele care există în LocalStorage dar NU există pe server
+        const missingOnServer = localData.filter(
+          (localSub) => !serverData.some((serverSub) => serverSub.id === localSub.id)
+        );
 
-    // Fetch inițial
-    fetch("http://127.0.0.1:8000/subscriptions?limit=100")
-      .then((res) => res.json())
-      .then((data) => setSubscriptions(data))
-      .catch((err) => {
-        console.log("Serverul este offline, folosim datele locale cache-uite.");
-        setIsOnline(false);
-      });
+        // Dacă am creat chestii offline, le combinam cu ce a venit de la server
+        if (missingOnServer.length > 0) {
+          console.log("🔄 Sincronizăm elementele offline...", missingOnServer);
+          finalData = [...finalData, ...missingOnServer];
+          toast.success(`Sincronizare completă! ${missingOnServer.length} abonamente salvate.`);
+        }
+      }
 
-    // WebSocket Logic
-    const ws = new WebSocket("ws://127.0.0.1:8000/ws");
-
-    ws.onopen = () => {
+      setSubscriptions(finalData);
       setIsOnline(true);
-      console.log("🟢 Conexiune live activă");
-    };
-
-    ws.onmessage = (event) => {
-      const noulAbonament = JSON.parse(event.data);
-      setSubscriptions((prev) => [...prev, noulAbonament]);
-    };
-
-    ws.onclose = () => {
+      return true; // Succes
+    } catch (error) {
       setIsOnline(false);
-      console.log("🔴 Conexiune pierdută cu serverul");
-    };
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-      ws.close();
-    };
+      return false; 
+    }
   }, []);
 
-  // Funcțiile de CRUD rămân la fel, dar acum ele modifică starea care se salvează automat în LocalStorage
+  // SISTEMUL DE AUTO-RECONNECT & WEBSOCKET
+  useEffect(() => {
+    let ws: WebSocket | null = null;
+    let reconnectTimer: NodeJS.Timeout;
+
+    const connectAndSync = async () => {
+      const serverIsUp = await syncWithServer();
+
+      if (!serverIsUp) {
+        // Dacă serverul e oprit, încercăm din nou peste 5 secunde, la nesfârșit
+        console.log("Server offline. Încercăm reconectarea în 5 secunde...");
+        reconnectTimer = setTimeout(connectAndSync, 5000);
+        return;
+      }
+
+      ws = new WebSocket("ws://127.0.0.1:8000/ws");
+
+      ws.onopen = () => {
+        console.log("🟢 Conexiune live activă!");
+        setIsOnline(true);
+      };
+
+      ws.onmessage = (event) => {
+        const noulAbonament = JSON.parse(event.data);
+        setSubscriptions((prev) => {
+          // Prevenim duplicatele (dacă vine pe țeavă ceva ce avem deja)
+          if (prev.some(s => s.id === noulAbonament.id)) return prev;
+          return [...prev, noulAbonament];
+        });
+      };
+
+      ws.onclose = () => {
+        console.log("🔴 Conexiune pierdută. Trecem pe Offline.");
+        setIsOnline(false);
+        // Dacă a crăpat țeava, pornim bucla de reconectare
+        reconnectTimer = setTimeout(connectAndSync, 5000);
+      };
+
+      ws.onerror = () => {
+        // Error forțează închiderea, care declanșează onclose-ul de mai sus
+        if (ws?.readyState === WebSocket.OPEN) ws.close();
+      };
+    };
+
+    connectAndSync();
+
+    return () => {
+      clearTimeout(reconnectTimer);
+      if (ws) ws.close();
+    };
+  }, [syncWithServer]);
+
   const addSubscription = useCallback((sub: Omit<Subscription, "id">) => {
     const newSub = { ...sub, id: String(Date.now()) };
     setSubscriptions(prev => [...prev, newSub]);
-    if (!isOnline) toast.info("Salvat local (offline)");
+    if (!isOnline) toast.info("Salvat local (offline). Se va trimite automat când revine conexiunea.");
   }, [isOnline]);
 
   const updateSubscription = useCallback((id: string, updates: Partial<Omit<Subscription, "id">>) => {
