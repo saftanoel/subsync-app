@@ -2,6 +2,7 @@ import asyncio
 from faker import Faker
 from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
+from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 from uuid import uuid4
 
@@ -12,7 +13,17 @@ app = FastAPI(
     version="2.0.0"
 )
 
-fake = Faker() # generator de date false
+# allow CORS for frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)   
+
+
+fake = Faker() # gsenerator de date false
 
 # pydantic models for validation 
 class SubscriptionBase(BaseModel):
@@ -62,8 +73,13 @@ class ConnectionManager:
         self.active_connections.remove(websocket)
 
     async def broadcast(self, message: str):
-        for connection in self.active_connections:
-            await connection.send_text(message)
+        # Folosim .copy() ca să nu se strice lista dacă se deconectează cineva
+        for connection in self.active_connections.copy():
+            try:
+                await connection.send_text(message)
+            except Exception:
+                #inchidem conexiunea dacă nu mai răspunde
+                self.active_connections.remove(connection)
 
 manager = ConnectionManager()
 
@@ -78,7 +94,7 @@ async def generate_fake_data():
         new_sub = Subscription(
             id=str(uuid4()),
             serviceName=fake.company(),
-            category=fake.word().capitalize(),
+            category=fake.random_element(elements=("Entertainment", "Software", "Music", "Productivity", "Cloud Storage", "Fitness", "News", "Gaming")),
             monthlyCost=round(fake.random.uniform(5.0, 50.0), 2),
             billingCycle=fake.random_element(elements=("Monthly", "Annual")),
             nextPayment=fake.date_this_year().isoformat(),
