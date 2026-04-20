@@ -6,11 +6,12 @@ import { SubscriptionForm } from "@/components/SubscriptionForm";
 import { SubscriptionDetail } from "@/components/SubscriptionDetail";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, DollarSign, CreditCard, TrendingUp } from "lucide-react";
+import { Plus, DollarSign, CreditCard, TrendingUp, WifiOff } from "lucide-react";
 import type { Subscription } from "@/types/subscription";
 
 export default function DashboardPage() {
-  const { subscriptions } = useSubscriptions();
+  // AM ADAUGAT isOnline AICI
+  const { subscriptions, isOnline } = useSubscriptions();
   const [showForm, setShowForm] = useState(false);
   const [editingSub, setEditingSub] = useState<Subscription | null>(null);
   const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
@@ -40,6 +41,22 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto px-4 py-6">
+      
+      {/* BANNER OFFLINE - Apare doar cand isOnline este fals */}
+      <AnimatePresence>
+        {!isOnline && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="mb-6 flex items-center justify-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
+          >
+            <WifiOff className="h-4 w-4" />
+            Atenție: Ești în modul Offline. Modificările sunt salvate local și se vor sincroniza când revine conexiunea.
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Stats row */}
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s, i) => (
