@@ -12,9 +12,14 @@ interface SubscriptionContextType {
   getSubscription: (id: string) => Subscription | undefined;
   sortColumn: string;
   setSortColumn: (col: string) => void;
+  hasMore: boolean;
+  loadMore: () => void;
+  isLoading: boolean;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | null>(null);
+
+const LIMIT = 10; 
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>(() => {
@@ -24,90 +29,137 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   const [isOnline, setIsOnline] = useState(true);
   const [sortColumn, setSortColumnState] = useState<string>(() => Cookies.get("subsync_sort") || "serviceName");
+  
+  const [skip, setSkip] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Salvare permanentă în LocalStorage
   useEffect(() => {
     localStorage.setItem("subsync_data", JSON.stringify(subscriptions));
   }, [subscriptions]);
 
-  // Data sync function - aduce datele de pe sv si le combina cu ce avem local (daca e cazul)
-  const syncWithServer = useCallback(async () => {
-    try {
-      const res = await fetch("http://127.0.0.1:8000/subscriptions?limit=100");
-      if (!res.ok) throw new Error("Server unreachable");
-      
-      const serverData: Subscription[] = await res.json();
-      const savedData = localStorage.getItem("subsync_data");
-      
-      let finalData = [...serverData];
-
-      if (savedData) {
-        const localData: Subscription[] = JSON.parse(savedData);
-        
-        // Căutăm elementele care există în LocalStorage dar NU există pe server
-        const missingOnServer = localData.filter(
-          (localSub) => !serverData.some((serverSub) => serverSub.id === localSub.id)
-        );
-
-        // Dacă am creat chestii offline, le combinam cu ce a venit de la server
-        if (missingOnServer.length > 0) {
-          console.log("🔄 Sincronizăm elementele offline...", missingOnServer);
-          finalData = [...finalData, ...missingOnServer];
-          toast.success(`Sincronizare completă! ${missingOnServer.length} abonamente salvate.`);
+  const fetchFromGraphQL = async (currentSkip: number) => {
+    const query = `
+      query {
+        allSubscriptions(skip: ${currentSkip}, limit: ${LIMIT}) {
+          id
+          serviceName
+          category
+          monthlyCost
+          billingCycle
+          nextPayment
+          valueRating
+          payments { id amount date }
         }
       }
+    `;
 
-      setSubscriptions(finalData);
+    const res = await fetch("http://127.0.0.1:8000/graphql", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query })
+    });
+
+    if (!res.ok) throw new Error("Eroare de conexiune GraphQL");
+    const json = await res.json();
+    return json.data.allSubscriptions;
+  };
+
+  const syncWithServer = useCallback(async (isLoadMore = false, currentSkip = 0) => {
+    try {
+      setIsLoading(true);
+      const serverData = await fetchFromGraphQL(currentSkip);
+      
+      if (serverData.length < LIMIT) {
+        setHasMore(false);
+        if (isLoadMore) toast.info(`S-a atins finalul! Serverul a trimis doar ${serverData.length} elemente.`);
+      } else {
+        setHasMore(true);
+      }
+
+      setSubscriptions(prev => {
+        let newData = isLoadMore ? [...prev, ...serverData] : [...serverData];
+
+        if (!isLoadMore) {
+          const savedData = localStorage.getItem("subsync_data");
+          if (savedData) {
+            const localData: Subscription[] = JSON.parse(savedData);
+            const missingOnServer = localData.filter(
+              (localSub) => !serverData.some((serverSub: Subscription) => serverSub.id === localSub.id)
+            );
+            if (missingOnServer.length > 0) {
+              newData = [...newData, ...missingOnServer];
+            }
+          }
+        }
+        
+        // Eliminăm duplicatele
+        const uniqueData = Array.from(new Map(newData.map(item => [item.id, item])).values());
+        
+        // LOGICĂ DE DEBUG PENTRU LOAD MORE
+        if (isLoadMore) {
+           const addedCount = uniqueData.length - prev.length;
+           if (addedCount > 0) {
+               toast.success(`Succes: Am adăugat ${addedCount} abonamente noi la listă!`);
+           } else {
+               toast.warning(`Atenție: Serverul a trimis ${serverData.length} elemente, dar erau deja pe ecran!`);
+           }
+        }
+
+        return uniqueData as Subscription[];
+      });
+
       setIsOnline(true);
-      return true; // Succes
+      return true;
     } catch (error) {
+      toast.error("Eroare la contactarea serverului!");
       setIsOnline(false);
-      return false; 
+      return false;
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
-  // SISTEMUL DE AUTO-RECONNECT & WEBSOCKET
+  const loadMore = useCallback(() => {
+    if (!isLoading && hasMore && isOnline) {
+      const nextSkip = skip + LIMIT;
+      setSkip(nextSkip);
+      syncWithServer(true, nextSkip);
+    }
+  }, [skip, isLoading, hasMore, isOnline, syncWithServer]);
+
   useEffect(() => {
     let ws: WebSocket | null = null;
     let reconnectTimer: NodeJS.Timeout;
 
     const connectAndSync = async () => {
-      const serverIsUp = await syncWithServer();
+      setSkip(0);
+      const serverIsUp = await syncWithServer(false, 0);
 
       if (!serverIsUp) {
-        // Dacă serverul e oprit, încercăm din nou peste 5 secunde, la nesfârșit
-        console.log("Server offline. Încercăm reconectarea în 5 secunde...");
         reconnectTimer = setTimeout(connectAndSync, 5000);
         return;
       }
 
       ws = new WebSocket("ws://127.0.0.1:8000/ws");
 
-      ws.onopen = () => {
-        console.log("🟢 Conexiune live activă!");
-        setIsOnline(true);
-      };
+      ws.onopen = () => setIsOnline(true);
 
       ws.onmessage = (event) => {
         const noulAbonament = JSON.parse(event.data);
+        if (!noulAbonament.payments) noulAbonament.payments = [];
         setSubscriptions((prev) => {
-          // Prevenim duplicatele (dacă vine pe țeavă ceva ce avem deja)
           if (prev.some(s => s.id === noulAbonament.id)) return prev;
-          return [...prev, noulAbonament];
+          return [noulAbonament, ...prev]; 
         });
       };
 
       ws.onclose = () => {
-        console.log("🔴 Conexiune pierdută. Trecem pe Offline.");
         setIsOnline(false);
-        // Dacă a crăpat țeava, pornim bucla de reconectare
         reconnectTimer = setTimeout(connectAndSync, 5000);
       };
-
-      ws.onerror = () => {
-        // Error forțează închiderea, care declanșează onclose-ul de mai sus
-        if (ws?.readyState === WebSocket.OPEN) ws.close();
-      };
+      
+      ws.onerror = () => { if (ws?.readyState === WebSocket.OPEN) ws.close(); };
     };
 
     connectAndSync();
@@ -118,10 +170,11 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     };
   }, [syncWithServer]);
 
+  // ... (restul funcțiilor rămân identice)
   const addSubscription = useCallback((sub: Omit<Subscription, "id">) => {
-    const newSub = { ...sub, id: String(Date.now()) };
-    setSubscriptions(prev => [...prev, newSub]);
-    if (!isOnline) toast.info("Salvat local (offline). Se va trimite automat când revine conexiunea.");
+    const newSub = { ...sub, id: String(Date.now()), payments: [] };
+    setSubscriptions(prev => [newSub, ...prev]);
+    if (!isOnline) toast.info("Salvat local. Se va sincroniza automat.");
   }, [isOnline]);
 
   const updateSubscription = useCallback((id: string, updates: Partial<Omit<Subscription, "id">>) => {
@@ -140,7 +193,10 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }, []);
 
   return (
-    <SubscriptionContext.Provider value={{ subscriptions, isOnline, addSubscription, updateSubscription, deleteSubscription, getSubscription, sortColumn, setSortColumn }}>
+    <SubscriptionContext.Provider value={{ 
+      subscriptions, isOnline, addSubscription, updateSubscription, deleteSubscription, 
+      getSubscription, sortColumn, setSortColumn, hasMore, loadMore, isLoading 
+    }}>
       {children}
     </SubscriptionContext.Provider>
   );
