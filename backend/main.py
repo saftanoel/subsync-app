@@ -52,11 +52,12 @@ class SubscriptionUpdate(BaseModel):
 db_subscriptions: List[Subscription] = []
 
 db_subscriptions.append(Subscription(
-    id=str(uuid4()), serviceName="Netflix", category="Entertainment", 
+    id="netflix-id-1", serviceName="Netflix", category="Entertainment", 
     monthlyCost=15.99, billingCycle="Monthly", nextPayment="2024-05-15", valueRating=5
 ))
 db_subscriptions.append(Subscription(
-    id=str(uuid4()), serviceName="Spotify", category="Entertainment", 
+    id="spotify-id-1"
+    , serviceName="Spotify", category="Entertainment", 
     monthlyCost=9.99, billingCycle="Monthly", nextPayment="2024-05-10", valueRating=4
 ))
 
