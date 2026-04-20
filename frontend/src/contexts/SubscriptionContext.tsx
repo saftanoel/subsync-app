@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import Cookies from "js-cookie";
 import type { Subscription } from "@/types/subscription";
+import { toast } from "sonner"; // Presupunând că folosești Sonner din proiectul tău
 
 interface SubscriptionContextType {
   subscriptions: Subscription[];
+  isOnline: boolean;
   addSubscription: (sub: Omit<Subscription, "id">) => void;
   updateSubscription: (id: string, sub: Partial<Omit<Subscription, "id">>) => void;
   deleteSubscription: (id: string) => void;
@@ -12,79 +14,71 @@ interface SubscriptionContextType {
   setSortColumn: (col: string) => void;
 }
 
-/* const initialSubs: Subscription[] = [
-
-{ id: "1", serviceName: "Netflix", category: "Entertainment", monthlyCost: 15.99, billingCycle: "Monthly", nextPayment: "2024-11-15", valueRating: 4 },
-
-{ id: "2", serviceName: "Adobe Cloud", category: "Software", monthlyCost: 54.99, billingCycle: "Monthly", nextPayment: "2024-11-22", valueRating: 3 },
-
-{ id: "3", serviceName: "Amazon Prime", category: "Entertainment", monthlyCost: 11.58, billingCycle: "Annual", nextPayment: "2024-12-12", valueRating: 5 },
-
-{ id: "4", serviceName: "Spotify Family", category: "Music", monthlyCost: 16.99, billingCycle: "Monthly", nextPayment: "2024-11-28", valueRating: 4 },
-
-{ id: "5", serviceName: "ChatGPT Plus", category: "Productivity", monthlyCost: 20.00, billingCycle: "Monthly", nextPayment: "2024-11-05", valueRating: 5 },
-
-{ id: "6", serviceName: "iCloud+", category: "Cloud Storage", monthlyCost: 2.99, billingCycle: "Monthly", nextPayment: "2024-11-18", valueRating: 3 },
-
-{ id: "7", serviceName: "Gym Membership", category: "Fitness", monthlyCost: 35.00, billingCycle: "Monthly", nextPayment: "2024-11-01", valueRating: 2 },
-
-{ id: "8", serviceName: "NYT Digital", category: "News", monthlyCost: 4.25, billingCycle: "Monthly", nextPayment: "2024-11-10", valueRating: 3 },
-
-];
- */
-
-
 const SubscriptionContext = createContext<SubscriptionContextType | null>(null);
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
-  // Pornim cu o listă goală, datele vor veni de la backend-ul de Python
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  
-  const [sortColumn, setSortColumnState] = useState<string>(() => {
-    return Cookies.get("subsync_sort") || "serviceName";
+  // 1. Încărcăm datele din LocalStorage la început (dacă există)
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>(() => {
+    const saved = localStorage.getItem("subsync_data");
+    return saved ? JSON.parse(saved) : [];
   });
 
-  const setSortColumn = useCallback((col: string) => {
-    setSortColumnState(col);
-    Cookies.set("subsync_sort", col, { expires: 365 });
-  }, []);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [sortColumn, setSortColumnState] = useState<string>(() => Cookies.get("subsync_sort") || "serviceName");
 
-  // get si websocket logic - backend integration with Python server
-useEffect(() => {
-    // Luăm lista inițială
-    fetch("http://localhost:8000/subscriptions?limit=100")
+  // Salvare automată în LocalStorage ori de câte ori se schimbă lista
+  useEffect(() => {
+    localStorage.setItem("subsync_data", JSON.stringify(subscriptions));
+  }, [subscriptions]);
+
+  useEffect(() => {
+    // Detectăm starea internetului browser-ului
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    // Fetch inițial
+    fetch("http://127.0.0.1:8000/subscriptions?limit=100")
       .then((res) => res.json())
       .then((data) => setSubscriptions(data))
-      .catch((err) => console.error("Eroare la fetch:", err));
+      .catch((err) => {
+        console.log("Serverul este offline, folosim datele locale cache-uite.");
+        setIsOnline(false);
+      });
 
-    const ws = new WebSocket("ws://localhost:8000/ws");
+    // WebSocket Logic
+    const ws = new WebSocket("ws://127.0.0.1:8000/ws");
 
     ws.onopen = () => {
-      console.log("🟢 Conexiune WebSocket DESCHISĂ!");
+      setIsOnline(true);
+      console.log("🟢 Conexiune live activă");
     };
 
     ws.onmessage = (event) => {
-      console.log("🔵 A venit un abonament nou prin WebSocket:", event.data);
       const noulAbonament = JSON.parse(event.data);
       setSubscriptions((prev) => [...prev, noulAbonament]);
     };
 
-    ws.onerror = (error) => {
-      console.error("🔴 Eroare WebSocket. Serverul a refuzat conexiunea.");
+    ws.onclose = () => {
+      setIsOnline(false);
+      console.log("🔴 Conexiune pierdută cu serverul");
     };
 
-    // Curățare curată ca să nu crăpăm backend-ul
     return () => {
-      if (ws.readyState === 1) { 
-        ws.close();
-      }
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+      ws.close();
     };
   }, []);
- 
+
+  // Funcțiile de CRUD rămân la fel, dar acum ele modifică starea care se salvează automat în LocalStorage
   const addSubscription = useCallback((sub: Omit<Subscription, "id">) => {
-    const fakeId = String(Date.now());
-    setSubscriptions(prev => [...prev, { ...sub, id: fakeId }]);
-  }, []);
+    const newSub = { ...sub, id: String(Date.now()) };
+    setSubscriptions(prev => [...prev, newSub]);
+    if (!isOnline) toast.info("Salvat local (offline)");
+  }, [isOnline]);
 
   const updateSubscription = useCallback((id: string, updates: Partial<Omit<Subscription, "id">>) => {
     setSubscriptions(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
@@ -94,12 +88,15 @@ useEffect(() => {
     setSubscriptions(prev => prev.filter(s => s.id !== id));
   }, []);
 
-  const getSubscription = useCallback((id: string) => {
-    return subscriptions.find(s => s.id === id);
-  }, [subscriptions]);
+  const getSubscription = useCallback((id: string) => subscriptions.find(s => s.id === id), [subscriptions]);
+
+  const setSortColumn = useCallback((col: string) => {
+    setSortColumnState(col);
+    Cookies.set("subsync_sort", col, { expires: 365 });
+  }, []);
 
   return (
-    <SubscriptionContext.Provider value={{ subscriptions, addSubscription, updateSubscription, deleteSubscription, getSubscription, sortColumn, setSortColumn }}>
+    <SubscriptionContext.Provider value={{ subscriptions, isOnline, addSubscription, updateSubscription, deleteSubscription, getSubscription, sortColumn, setSortColumn }}>
       {children}
     </SubscriptionContext.Provider>
   );
@@ -107,6 +104,6 @@ useEffect(() => {
 
 export const useSubscriptions = () => {
   const ctx = useContext(SubscriptionContext);
-  if (!ctx) throw new Error("useSubscuvicorn main:app --reloadriptions must be used within SubscriptionProvider");
+  if (!ctx) throw new Error("useSubscriptions must be used within SubscriptionProvider");
   return ctx;
 };
