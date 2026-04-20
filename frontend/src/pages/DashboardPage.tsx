@@ -10,8 +10,8 @@ import { Plus, DollarSign, CreditCard, TrendingUp, WifiOff } from "lucide-react"
 import type { Subscription } from "@/types/subscription";
 
 export default function DashboardPage() {
-  // AM ADAUGAT isOnline AICI
-  const { subscriptions, isOnline } = useSubscriptions();
+  // GOLD CHALLENGE: Am adus isLoading, hasMore și loadMore din Context
+  const { subscriptions, isOnline, isLoading, hasMore, loadMore } = useSubscriptions();
   const [showForm, setShowForm] = useState(false);
   const [editingSub, setEditingSub] = useState<Subscription | null>(null);
   const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
@@ -32,17 +32,13 @@ export default function DashboardPage() {
   ];
 
   useEffect(() => {
-    // Setează cookie-urile cerute de testul Playwright
-    document.cookie = "user-activity=active; path=/; max-age=86400"; // Expiră în 24h
+    document.cookie = "user-activity=active; path=/; max-age=86400"; 
     document.cookie = "preferences=dark-mode; path=/; max-age=86400";
-
-    console.log("Cookies have been set for Silver Challenge");
   }, []);
 
   return (
     <div className="container mx-auto px-4 py-6">
       
-      {/* BANNER OFFLINE - Apare doar cand isOnline este fals */}
       <AnimatePresence>
         {!isOnline && (
           <motion.div
@@ -57,7 +53,6 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
-      {/* Stats row */}
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s, i) => (
           <motion.div
@@ -82,7 +77,6 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Your Subscriptions</h1>
         <Button onClick={() => { setEditingSub(null); setShowForm(true); }} className="gradient-primary text-primary-foreground font-semibold glow-primary gap-2">
@@ -90,20 +84,46 @@ export default function DashboardPage() {
         </Button>
       </div>
 
-      {/* Side by side: Table + Charts */}
       <div className="grid gap-6 lg:grid-cols-5">
-        <div className="lg:col-span-3">
+        
+        {/* ZONA DE TABEL + BUTON DE LOAD MORE */}
+        <div className="lg:col-span-3 flex flex-col gap-4">
           <SubscriptionTable
             onEdit={(sub) => { setEditingSub(sub); setShowForm(true); }}
             onSelect={setSelectedSub}
           />
+          
+          {/* Logica de Paginare / Infinite Scroll */}
+          {hasMore && (
+            <Button 
+              variant="outline" 
+              className="w-full border-dashed py-6 text-muted-foreground hover:text-foreground"
+              onClick={loadMore}
+              disabled={isLoading || !isOnline}
+            >
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  Se încarcă...
+                </span>
+              ) : (
+                "⬇️ Încarcă următoarea pagină (Infinite Scroll)"
+              )}
+            </Button>
+          )}
+          
+          {!hasMore && subscriptions.length > 0 && (
+            <p className="text-center text-xs text-muted-foreground">
+              Ai ajuns la finalul bazei de date. Toate datele sunt afișate.
+            </p>
+          )}
         </div>
+
         <div className="lg:col-span-2">
           <StatsCharts />
         </div>
       </div>
 
-      {/* Form Modal */}
       <AnimatePresence>
         {showForm && (
           <SubscriptionForm
@@ -113,7 +133,6 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
-      {/* Detail Modal */}
       <AnimatePresence>
         {selectedSub && (
           <SubscriptionDetail

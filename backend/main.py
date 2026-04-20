@@ -17,6 +17,7 @@ app = FastAPI(
     version="3.0.0"
 )
 
+# Middleware pentru CORS (permite frontend-ului să comunice cu backend-ul)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -52,14 +53,14 @@ async def start_generator():
         return {"message": "Generator is already running"}
     services.is_generating = True
     asyncio.create_task(generate_fake_data())
-    return {"message": "Generator started successfully"}
+    return "Generator started successfully"
 
 @app.post("/stop-generator")
 async def stop_generator():
     if not services.is_generating:
         return {"message": "Generator is not running"}
     services.is_generating = False
-    return {"message": "Generator stopped successfully"}
+    return  "Generator stopped successfully"
 
 # rest api endpoints (temporare)
 @app.get("/subscriptions", response_model=List[Subscription])

@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useSubscriptions } from "@/contexts/SubscriptionContext";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Pencil, Trash2, ChevronLeft, ChevronRight, ArrowUpDown, Star } from "lucide-react";
+import { Pencil, Trash2, ChevronLeft, ChevronRight, ArrowUpDown, Star, List, Layers } from "lucide-react";
 import type { Subscription } from "@/types/subscription";
 
 const PAGE_SIZE = 5;
@@ -14,6 +14,9 @@ interface Props {
 
 export function SubscriptionTable({ onEdit, onSelect }: Props) {
   const { subscriptions, deleteSubscription, sortColumn, setSortColumn } = useSubscriptions();
+  
+  // GOLD CHALLENGE: State pentru Toggle între Paginare și Infinite Scroll
+  const [viewMode, setViewMode] = useState<"infinite" | "pagination">("infinite");
   const [page, setPage] = useState(0);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
@@ -29,7 +32,11 @@ export function SubscriptionTable({ onEdit, onSelect }: Props) {
   }, [subscriptions, sortColumn, sortDir]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
-  const paginated = sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  
+  // Alegem ce date afișăm în funcție de modul selectat
+  const itemsToDisplay = viewMode === "pagination" 
+    ? sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE) 
+    : sorted;
 
   const handleSort = (col: string) => {
     if (sortColumn === col) setSortDir(d => d === "asc" ? "desc" : "asc");
@@ -46,6 +53,29 @@ export function SubscriptionTable({ onEdit, onSelect }: Props) {
 
   return (
     <div className="glass rounded-2xl overflow-hidden">
+      
+      {/* TOOLBAR: Toggle View Mode */}
+      <div className="flex items-center justify-between border-b border-border bg-secondary/20 px-4 py-2">
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          {viewMode === "infinite" ? "Infinite Scroll View" : "Paginated View"}
+        </span>
+        <Button 
+          variant="secondary" 
+          size="sm" 
+          className="h-8 text-xs font-medium"
+          onClick={() => {
+            setViewMode(v => v === "infinite" ? "pagination" : "infinite");
+            setPage(0); // Resetează pagina când schimbăm view-ul
+          }}
+        >
+          {viewMode === "infinite" ? (
+            <><Layers className="h-3.5 w-3.5 mr-2" /> Switch to Pages</>
+          ) : (
+            <><List className="h-3.5 w-3.5 mr-2" /> Switch to Scroll</>
+          )}
+        </Button>
+      </div>
+
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -66,7 +96,7 @@ export function SubscriptionTable({ onEdit, onSelect }: Props) {
             </tr>
           </thead>
           <tbody>
-            {paginated.map((sub, i) => (
+            {itemsToDisplay.map((sub, i) => (
               <motion.tr
                 key={sub.id}
                 initial={{ opacity: 0, x: -10 }}
@@ -98,38 +128,40 @@ export function SubscriptionTable({ onEdit, onSelect }: Props) {
                 </td>
               </motion.tr>
             ))}
-            {paginated.length === 0 && (
+            {itemsToDisplay.length === 0 && (
               <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No subscriptions yet. Add one!</td></tr>
             )}
           </tbody>
         </table>
       </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between border-t border-border px-4 py-3">
-        <span className="text-xs text-muted-foreground">
-          Page {page + 1} of {totalPages}
-        </span>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-7 w-7" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          {Array.from({ length: totalPages }, (_, i) => (
-            <Button
-              key={i}
-              variant={page === i ? "default" : "ghost"}
-              size="icon"
-              className={`h-7 w-7 text-xs ${page === i ? "gradient-primary text-primary-foreground" : ""}`}
-              onClick={() => setPage(i)}
-            >
-              {i + 1}
+      {/* Pagination Footer (Apare DOAR dacă modul ales este 'pagination') */}
+      {viewMode === "pagination" && (
+        <div className="flex items-center justify-between border-t border-border px-4 py-3">
+          <span className="text-xs text-muted-foreground">
+            Page {page + 1} of {totalPages}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-7 w-7" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
+              <ChevronLeft className="h-4 w-4" />
             </Button>
-          ))}
-          <Button variant="ghost" size="icon" className="h-7 w-7" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+            {Array.from({ length: totalPages }, (_, i) => (
+              <Button
+                key={i}
+                variant={page === i ? "default" : "ghost"}
+                size="icon"
+                className={`h-7 w-7 text-xs ${page === i ? "gradient-primary text-primary-foreground" : ""}`}
+                onClick={() => setPage(i)}
+              >
+                {i + 1}
+              </Button>
+            ))}
+            <Button variant="ghost" size="icon" className="h-7 w-7" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
