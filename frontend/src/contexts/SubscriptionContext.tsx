@@ -170,7 +170,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     };
   }, [syncWithServer]);
 
-  // ... (restul funcțiilor rămân identice)
+  
   const addSubscription = useCallback((sub: Omit<Subscription, "id">) => {
     const newSub = { ...sub, id: String(Date.now()), payments: [] };
     setSubscriptions(prev => [newSub, ...prev]);
