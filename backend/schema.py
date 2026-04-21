@@ -1,8 +1,10 @@
 import strawberry
 from typing import List, Optional
+import uuid
 from database import db_subscriptions
 
-# Definim cum arată datele pentru graphql
+# definitii de tipuri noduri pt grapql
+
 @strawberry.type
 class PaymentNode:
     id: str
@@ -21,7 +23,9 @@ class SubscriptionNode:
     valueRating: int
     payments: List[PaymentNode]
 
-# Definim interogările (ce putem cere de la server)
+
+# queries
+
 @strawberry.type
 class Query:
     # GOLD CHALLENGE: skip si limit pentru paginare si infinite scroll
@@ -32,12 +36,16 @@ class Query:
         paginated_subs = db_subscriptions[skip : skip + limit]
         
         for sub in paginated_subs:
+            # Folosim getattr ca plasă de siguranță dacă sub.payments e None sau nu există
+            payments_list = getattr(sub, 'payments', []) or []
+            
             payment_nodes = [
-                PaymentNode(id=p.id, amount=p.amount, date=p.date, subscription_id=p.subscription_id)
-                for p in sub.payments
+                PaymentNode(id=str(p.id), amount=p.amount, date=p.date, subscription_id=p.subscription_id)
+                for p in payments_list
             ]
+            
             sub_node = SubscriptionNode(
-                id=sub.id,
+                id=str(sub.id),
                 serviceName=sub.serviceName,
                 category=sub.category,
                 monthlyCost=sub.monthlyCost,
@@ -52,13 +60,15 @@ class Query:
     @strawberry.field
     def subscription_by_id(self, sub_id: str) -> Optional[SubscriptionNode]:
         for sub in db_subscriptions:
-            if sub.id == sub_id:
+            if str(sub.id) == sub_id:
+                payments_list = getattr(sub, 'payments', []) or []
+                
                 payment_nodes = [
-                    PaymentNode(id=p.id, amount=p.amount, date=p.date, subscription_id=p.subscription_id)
-                    for p in sub.payments
+                    PaymentNode(id=str(p.id), amount=p.amount, date=p.date, subscription_id=p.subscription_id)
+                    for p in payments_list
                 ]
                 return SubscriptionNode(
-                    id=sub.id,
+                    id=str(sub.id),
                     serviceName=sub.serviceName,
                     category=sub.category,
                     monthlyCost=sub.monthlyCost,
@@ -70,4 +80,47 @@ class Query:
         return None
 
 
-schema = strawberry.Schema(query=Query)
+# mutations pt payments
+
+@strawberry.type
+class Mutation:
+    @strawberry.mutation
+    def add_payment(self, subscription_id: str, amount: float, date: str) -> PaymentNode:
+        # Importăm modelul OFICIAL aici, în interior, ca să evităm buclele de import
+        from models import Payment 
+        
+        for sub in db_subscriptions:
+            if str(sub.id) == subscription_id:
+                new_id = str(uuid.uuid4())
+                
+                # Creăm plata fix cu modelul Pydantic (cel corect)
+                new_payment = Payment(
+                    id=new_id,
+                    amount=amount,
+                    date=date,
+                    subscription_id=subscription_id
+
+                )
+                
+                if getattr(sub, "payments", None) is None:
+                    sub.payments = []
+                    
+                sub.payments.insert(0, new_payment)
+                
+                return PaymentNode(id=new_id, amount=amount, date=date, subscription_id=subscription_id)
+                
+        raise Exception("Abonamentul nu a fost găsit în baza de date!")
+
+    @strawberry.mutation
+    def delete_payment(self, subscription_id: str, payment_id: str) -> bool:
+        for sub in db_subscriptions:
+            if str(sub.id) == subscription_id:
+                if getattr(sub, "payments", None) is not None:
+                    original_len = len(sub.payments)
+                    sub.payments = [p for p in sub.payments if str(p.id) != payment_id]
+                    return len(sub.payments) < original_len
+        return False
+
+
+# dam export la ambele query si mutation intr-un singur schema
+schema = strawberry.Schema(query=Query, mutation=Mutation)

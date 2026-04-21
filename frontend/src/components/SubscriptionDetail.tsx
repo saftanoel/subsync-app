@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { X, Star, TrendingDown, Calendar, DollarSign } from "lucide-react";
 import type { Subscription } from "@/types/subscription";
+import { PaymentHistory } from "./PaymentHistory"; // <-- AM ADĂUGAT IMPORTUL
 
 interface Props {
   subscription: Subscription;
@@ -93,6 +94,13 @@ export function SubscriptionDetail({ subscription: sub, onClose }: Props) {
             ))}
           </div>
         </div>
+
+        {/* <-- Fullstack relation --> */}
+        <PaymentHistory 
+          subscriptionId={sub.id} 
+          payments={sub.payments || []} 
+        />
+
       </motion.div>
     </motion.div>
   );
