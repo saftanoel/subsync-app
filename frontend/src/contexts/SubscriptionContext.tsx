@@ -33,6 +33,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const [skip, setSkip] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // "Sertarul" pentru Prefetching
+  const [prefetchedData, setPrefetchedData] = useState<Subscription[]>([]);
 
   useEffect(() => {
     localStorage.setItem("subsync_data", JSON.stringify(subscriptions));
@@ -65,11 +68,19 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     return json.data.allSubscriptions;
   };
 
-  const syncWithServer = useCallback(async (isLoadMore = false, currentSkip = 0) => {
+  // AM MODIFICAT AICI: Am adăugat isPrefetch = false
+  const syncWithServer = useCallback(async (isLoadMore = false, currentSkip = 0, isPrefetch = false) => {
     try {
-      setIsLoading(true);
+      if (!isPrefetch) setIsLoading(true); // Nu arătăm loading spinner dacă tragem pe furiș
+      
       const serverData = await fetchFromGraphQL(currentSkip);
       
+      // Dacă este prefetch, doar punem datele în sertar și oprim funcția aici
+      if (isPrefetch) {
+        setPrefetchedData(serverData);
+        return true;
+      }
+
       if (serverData.length < LIMIT) {
         setHasMore(false);
         if (isLoadMore) toast.info(`S-a atins finalul! Serverul a trimis doar ${serverData.length} elemente.`);
@@ -96,13 +107,11 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         // Eliminăm duplicatele
         const uniqueData = Array.from(new Map(newData.map(item => [item.id, item])).values());
         
-        // LOGICĂ DE DEBUG PENTRU LOAD MORE
         if (isLoadMore) {
            const addedCount = uniqueData.length - prev.length;
            if (addedCount > 0) {
-               toast.success(`Succes: Am adăugat ${addedCount} abonamente noi la listă!`);
-           } else {
-               toast.warning(`Atenție: Serverul a trimis ${serverData.length} elemente, dar erau deja pe ecran!`);
+               // Opțional: Poți scoate toast-ul de succes dacă e prea zgomotos vizual
+               // toast.success(`Succes: Am adăugat ${addedCount} abonamente noi la listă!`);
            }
         }
 
@@ -112,21 +121,36 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       setIsOnline(true);
       return true;
     } catch (error) {
-      toast.error("Eroare la contactarea serverului!");
+      if (!isPrefetch) toast.error("Eroare la contactarea serverului!");
       setIsOnline(false);
       return false;
     } finally {
-      setIsLoading(false);
+      if (!isPrefetch) setIsLoading(false);
     }
   }, []);
 
   const loadMore = useCallback(() => {
     if (!isLoading && hasMore && isOnline) {
       const nextSkip = skip + LIMIT;
-      setSkip(nextSkip);
-      syncWithServer(true, nextSkip);
+      //daca avem deja date prefetchuite, le folosim si pregatim urmatorul prefetch
+      if (prefetchedData.length > 0) {
+        setSubscriptions(prev => {
+          const newData = [...prev, ...prefetchedData];
+          const uniqueData = Array.from(new Map(newData.map(item => [item.id, item])).values());
+          return uniqueData as Subscription[];
+        });
+        setSkip(nextSkip);
+        setPrefetchedData([]); 
+
+        // Declanșăm prefetching pentru URMĂTOAREA pagină în background
+        syncWithServer(false, nextSkip + LIMIT, true); 
+      } else {
+        // Fallback normal dacă prefetch-ul nu a apucat să se termine (sau a eșuat)
+        setSkip(nextSkip);
+        syncWithServer(true, nextSkip, false);
+      }
     }
-  }, [skip, isLoading, hasMore, isOnline, syncWithServer]);
+  }, [skip, isLoading, hasMore, isOnline, prefetchedData, syncWithServer]);
 
   useEffect(() => {
     let ws: WebSocket | null = null;
@@ -134,12 +158,17 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
     const connectAndSync = async () => {
       setSkip(0);
+      
+      // 1. Aducem prima pagină (vizibilă)
       const serverIsUp = await syncWithServer(false, 0);
 
       if (!serverIsUp) {
         reconnectTimer = setTimeout(connectAndSync, 5000);
         return;
       }
+
+      // 2. Imediat ce a venit prima pagină, aducem pagina 2 în fundal (Prefetching inițial)
+      syncWithServer(false, LIMIT, true);
 
       ws = new WebSocket("ws://127.0.0.1:8000/ws");
 

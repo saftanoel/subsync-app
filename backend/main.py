@@ -26,17 +26,6 @@ app.add_middleware(
     allow_headers=["*"],
 )   
 
-# initial data
-if not db_subscriptions:
-    db_subscriptions.append(Subscription(
-        id="netflix-id-1", serviceName="Netflix", category="Entertainment", 
-        monthlyCost=15.99, billingCycle="Monthly", nextPayment="2024-05-15", valueRating=5, payments=[]
-    ))
-    db_subscriptions.append(Subscription(
-        id="spotify-id-2", serviceName="Spotify", category="Entertainment", 
-        monthlyCost=9.99, billingCycle="Monthly", nextPayment="2024-05-10", valueRating=4, payments=[]
-    ))
-
 # websockets and generator endpoints
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -62,7 +51,7 @@ async def stop_generator():
     services.is_generating = False
     return  "Generator stopped successfully"
 
-# rest api endpoints (temporare)
+# rest api endpoints (păstrate pentru compatibilitatea cu testele unitare)
 @app.get("/subscriptions", response_model=List[Subscription])
 def get_all_subscriptions(skip: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=100)):
     return db_subscriptions[skip : skip + limit]
