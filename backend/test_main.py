@@ -1,7 +1,6 @@
 from fastapi.testclient import TestClient
 from main import app, db_subscriptions
 
-# Creăm un client de test care se conectează la aplicația noastră FastAPI
 client = TestClient(app)
 
 def test_create_subscription():
@@ -26,10 +25,9 @@ def test_get_all_subscriptions_with_pagination():
     response = client.get("/subscriptions?skip=0&limit=1")
     assert response.status_code == 200
     data = response.json()
-    assert len(data) <= 1 # Verificăm că a adus maxim 1 element
+    assert len(data) <= 1 
 
 def test_get_single_subscription():
-    # Luăm primul element direct din "baza de date" (am populat 2 la început in main.py)
     sub_id = db_subscriptions[0].id
     response = client.get(f"/subscriptions/{sub_id}")
     assert response.status_code == 200
@@ -43,23 +41,20 @@ def test_update_subscription():
     sub_id = db_subscriptions[0].id
     response = client.put(
         f"/subscriptions/{sub_id}",
-        json={"monthlyCost": 99.99} # Modificăm doar prețul
+        json={"monthlyCost": 99.99} 
     )
     assert response.status_code == 200
     assert response.json()["monthlyCost"] == 99.99
 
 def test_delete_subscription():
-    # Creăm unul rapid de test pe care să-l ștergem
     create_resp = client.post("/subscriptions", json={
         "serviceName": "To Delete", "category": "Misc", "monthlyCost": 1.0, 
         "billingCycle": "Monthly", "nextPayment": "2024", "valueRating": 1
     })
     sub_id = create_resp.json()["id"]
     
-    # Îl ștergem
     del_resp = client.delete(f"/subscriptions/{sub_id}")
     assert del_resp.status_code == 204
     
-    # Verificăm că nu mai există
     check_resp = client.get(f"/subscriptions/{sub_id}")
     assert check_resp.status_code == 404

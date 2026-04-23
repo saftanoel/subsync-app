@@ -31,7 +31,6 @@ def test_create_subscription_valid():
     }
     response = client.post("/subscriptions", json=payload)
     
-    # AM MODIFICAT AICI: Așteptăm 201 Created în loc de 200
     assert response.status_code == 201, f"Testul a eșuat la validare cu mesajul: {response.json()}"
     
     data = response.json()

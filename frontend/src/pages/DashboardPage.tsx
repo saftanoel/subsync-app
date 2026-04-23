@@ -107,7 +107,7 @@ export default function DashboardPage() {
                   Se încarcă...
                 </span>
               ) : (
-                "⬇️ Încarcă următoarea pagină (Infinite Scroll)"
+                " Încarcă următoarea pagină "
               )}
             </Button>
           )}

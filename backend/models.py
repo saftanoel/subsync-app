@@ -28,5 +28,5 @@ class SubscriptionUpdate(BaseModel):
 
 class Subscription(SubscriptionBase):
     id: str
-    # Gold: Relația 1-la-mulți (Un abonament are o listă de plăți)
+    # Gold: Relația 1-to-many (Un abonament are o listă de plăți)
     payments: List[Payment] = []

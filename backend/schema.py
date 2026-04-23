@@ -86,7 +86,6 @@ class Query:
 class Mutation:
     @strawberry.mutation
     def add_payment(self, subscription_id: str, amount: float, date: str) -> PaymentNode:
-        # Importăm modelul OFICIAL aici, în interior, ca să evităm buclele de import
         from models import Payment 
         
         for sub in db_subscriptions:
