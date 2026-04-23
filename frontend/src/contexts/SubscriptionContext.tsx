@@ -27,21 +27,48 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(navigator.onLine); // Inițializăm cu starea reală a browserului
   const [sortColumn, setSortColumnState] = useState<string>(() => Cookies.get("subsync_sort") || "serviceName");
   
   const [skip, setSkip] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   
-  // "Sertarul" pentru Prefetching
+  // Prefetching
   const [prefetchedData, setPrefetchedData] = useState<Subscription[]>([]);
+
+  // --- FIX PENTRU NETWORK (F12 Offline) ---
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      toast.success("Conexiunea a fost restabilită. Sincronizăm datele...");
+      syncWithServer(false, 0); // Re-sincronizăm prima pagină când revine netul
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      toast.error("Ai trecut în modul Offline! Modificările se salvează local.");
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []); // Se rulează o singură dată la mount
 
   useEffect(() => {
     localStorage.setItem("subsync_data", JSON.stringify(subscriptions));
   }, [subscriptions]);
 
   const fetchFromGraphQL = async (currentSkip: number) => {
+    // Dacă browserul ne zice că e offline, nici nu mai încercăm fetch-ul
+    if (!navigator.onLine) {
+        throw new Error("Browserul este în modul Offline");
+    }
+
     const query = `
       query {
         allSubscriptions(skip: ${currentSkip}, limit: ${LIMIT}) {
@@ -68,14 +95,12 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     return json.data.allSubscriptions;
   };
 
-  // AM MODIFICAT AICI: Am adăugat isPrefetch = false
   const syncWithServer = useCallback(async (isLoadMore = false, currentSkip = 0, isPrefetch = false) => {
     try {
-      if (!isPrefetch) setIsLoading(true); // Nu arătăm loading spinner dacă tragem pe furiș
+      if (!isPrefetch) setIsLoading(true); 
       
       const serverData = await fetchFromGraphQL(currentSkip);
       
-      // Dacă este prefetch, doar punem datele în sertar și oprim funcția aici
       if (isPrefetch) {
         setPrefetchedData(serverData);
         return true;
@@ -83,7 +108,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
       if (serverData.length < LIMIT) {
         setHasMore(false);
-        if (isLoadMore) toast.info(`S-a atins finalul! Serverul a trimis doar ${serverData.length} elemente.`);
+        if (isLoadMore) toast.info(`S-a atins finalul!`);
       } else {
         setHasMore(true);
       }
@@ -104,25 +129,16 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
           }
         }
         
-        // Eliminăm duplicatele
         const uniqueData = Array.from(new Map(newData.map(item => [item.id, item])).values());
-        
-        if (isLoadMore) {
-           const addedCount = uniqueData.length - prev.length;
-           if (addedCount > 0) {
-               // Opțional: Poți scoate toast-ul de succes dacă e prea zgomotos vizual
-               // toast.success(`Succes: Am adăugat ${addedCount} abonamente noi la listă!`);
-           }
-        }
-
         return uniqueData as Subscription[];
       });
 
       setIsOnline(true);
       return true;
     } catch (error) {
-      if (!isPrefetch) toast.error("Eroare la contactarea serverului!");
-      setIsOnline(false);
+      if (!isPrefetch) {
+        setIsOnline(false);
+      }
       return false;
     } finally {
       if (!isPrefetch) setIsLoading(false);
@@ -132,7 +148,6 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const loadMore = useCallback(() => {
     if (!isLoading && hasMore && isOnline) {
       const nextSkip = skip + LIMIT;
-      //daca avem deja date prefetchuite, le folosim si pregatim urmatorul prefetch
       if (prefetchedData.length > 0) {
         setSubscriptions(prev => {
           const newData = [...prev, ...prefetchedData];
@@ -141,11 +156,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         });
         setSkip(nextSkip);
         setPrefetchedData([]); 
-
-        // Declanșăm prefetching pentru URMĂTOAREA pagină în background
         syncWithServer(false, nextSkip + LIMIT, true); 
       } else {
-        // Fallback normal dacă prefetch-ul nu a apucat să se termine (sau a eșuat)
         setSkip(nextSkip);
         syncWithServer(true, nextSkip, false);
       }
@@ -157,9 +169,12 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     let reconnectTimer: NodeJS.Timeout;
 
     const connectAndSync = async () => {
+      if (!navigator.onLine) {
+        reconnectTimer = setTimeout(connectAndSync, 5000);
+        return;
+      }
+
       setSkip(0);
-      
-      // 1. Aducem prima pagină (vizibilă)
       const serverIsUp = await syncWithServer(false, 0);
 
       if (!serverIsUp) {
@@ -167,7 +182,6 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         return;
       }
 
-      // 2. Imediat ce a venit prima pagină, aducem pagina 2 în fundal (Prefetching inițial)
       syncWithServer(false, LIMIT, true);
 
       ws = new WebSocket("ws://127.0.0.1:8000/ws");

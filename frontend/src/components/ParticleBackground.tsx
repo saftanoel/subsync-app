@@ -32,16 +32,15 @@ export function ParticleBackground() {
         class Particle {
             x: number;
             y: number;
-            baseX: number; // Ancora X
-            baseY: number; // Ancora Y
-            vx: number; // Viteza de plutire
-            vy: number; // Viteza de plutire
+            baseX: number;  // base pos pe x 
+            baseY: number;  // base pos pe y 
+            vx: number; // Viteza de plutire pe x 
+            vy: number; // Viteza de plutire pe y 
             size: number;
             density: number;
             color: string;
 
             constructor(canvasWidth: number, canvasHeight: number) {
-                // Ancora inițială pe ecran
                 this.baseX = Math.random() * canvasWidth;
                 this.baseY = Math.random() * canvasHeight;
 
@@ -75,7 +74,6 @@ export function ParticleBackground() {
             }
 
             update(canvasWidth: number, canvasHeight: number) {
-                // 1. Ancora plutește constant!
                 this.baseX += this.vx;
                 this.baseY += this.vy;
 
@@ -113,7 +111,7 @@ export function ParticleBackground() {
         let particleArray: Particle[] = [];
         const init = () => {
             particleArray = [];
-            //densitatea particulelor /2000
+            //densitatea particulelor /1650
             const numberOfParticles = (canvas.width * canvas.height) / 1650;
             for (let i = 0; i < numberOfParticles; i++) {
                 particleArray.push(new Particle(canvas.width, canvas.height));

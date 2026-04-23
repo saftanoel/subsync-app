@@ -30,7 +30,6 @@ export function ThemeToggle() {
             root.classList.toggle("dark");
 
             const isNowDark = root.classList.contains("dark");
-            // Salvăm noua preferință în browser
             localStorage.setItem("theme", isNowDark ? "dark" : "light");
             setIsDark(isNowDark);
         }, 100);

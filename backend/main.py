@@ -17,7 +17,7 @@ app = FastAPI(
     version="3.0.0"
 )
 
-# Middleware pentru CORS (permite frontend-ului să comunice cu backend-ul)
+# Middleware pentru CORS 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
