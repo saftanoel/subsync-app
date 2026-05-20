@@ -222,11 +222,13 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   const updateSubscription = useCallback((id: string, updates: Partial<Omit<Subscription, "id">>) => {
     setSubscriptions(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
-  }, []);
+    if (!isOnline) toast.info("Modificările au fost salvate local. Se vor sincroniza automat.");
+  }, [isOnline]);
 
   const deleteSubscription = useCallback((id: string) => {
     setSubscriptions(prev => prev.filter(s => s.id !== id));
-  }, []);
+    if (!isOnline) toast.info("Ștergerea a fost salvată local. Se va sincroniza automat.");
+  }, [isOnline]);
 
   const getSubscription = useCallback((id: string) => subscriptions.find(s => s.id === id), [subscriptions]);
 
