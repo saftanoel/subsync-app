@@ -1,16 +1,24 @@
 import pytest
 from fastapi.testclient import TestClient
 from main import app
-from database import db_subscriptions
+from database import SessionLocal
+from models_db import SubscriptionDB, PaymentDB
 
 # Inițializăm clientul de testare
 client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def run_before_and_after_tests():
-    """Curăță baza de date (memoria RAM) înainte de fiecare test pentru a rula 'pe curat'."""
-    db_subscriptions.clear()
+    """Curăță baza de date înainte de fiecare test pentru a rula 'pe curat'."""
+    with SessionLocal() as db:
+        db.query(PaymentDB).delete()
+        db.query(SubscriptionDB).delete()
+        db.commit()
     yield
+    with SessionLocal() as db:
+        db.query(PaymentDB).delete()
+        db.query(SubscriptionDB).delete()
+        db.commit()
 
 def test_get_subscriptions_empty():
     """Test: Cererea unei liste goale de abonamente."""

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { X, Star, TrendingDown, Calendar, DollarSign } from "lucide-react";
@@ -10,6 +11,16 @@ interface Props {
 }
 
 export function SubscriptionDetail({ subscription: sub, onClose }: Props) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   const yearly = sub.monthlyCost * 12;
   const savings = [
     { period: "1 Year Saved", amount: yearly, desc: "Just by hitting cancel, enough for a weekend city break." },

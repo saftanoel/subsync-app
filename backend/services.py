@@ -4,7 +4,9 @@ from uuid import uuid4
 from typing import List
 from fastapi import WebSocket
 from models import Subscription, Payment
-from database import db_subscriptions, db_payments
+
+from database import SessionLocal
+from models_db import SubscriptionDB, PaymentDB
 
 fake = Faker()
 is_generating = False
@@ -34,31 +36,51 @@ async def generate_fake_data():
     while is_generating:
         await asyncio.sleep(3) # Generează la fiecare 3 secunde
         
-        # 1. Creăm abonamentul principal
         sub_id = str(uuid4())
-        new_sub = Subscription(
-            id=sub_id,
-            serviceName=fake.company(),
-            category=fake.random_element(elements=("Entertainment", "Software", "Music", "Productivity", "Cloud Storage", "Fitness", "News", "Gaming")),
-            monthlyCost=round(fake.random.uniform(5.0, 50.0), 2),
-            billingCycle=fake.random_element(elements=("Monthly", "Annual")),
-            nextPayment=fake.date_this_year().isoformat(),
-            valueRating=fake.random_int(min=1, max=5),
-            payments=[] # Lista de plăți începe goală
-        )
         
-        # 2. GOLD CHALLENGE: Relația 1 to many (Generăm 1-3 plăți istorice pentru acest abonament)
-        num_payments = fake.random_int(min=1, max=3)
-        for _ in range(num_payments):
-            new_payment = Payment(
-                id=str(uuid4()),
-                amount=new_sub.monthlyCost,
-                date=fake.date_between(start_date='-1y', end_date='today').isoformat(),
-                subscription_id=sub_id
+        with SessionLocal() as db:
+            new_sub_db = SubscriptionDB(
+                id=sub_id,
+                serviceName=fake.company(),
+                category=fake.random_element(elements=("Entertainment", "Software", "Music", "Productivity", "Cloud Storage", "Fitness", "News", "Gaming")),
+                monthlyCost=round(fake.random.uniform(5.0, 50.0), 2),
+                billingCycle=fake.random_element(elements=("Monthly", "Annual")),
+                nextPayment=fake.date_this_year().isoformat(),
+                valueRating=fake.random_int(min=1, max=5)
             )
-            new_sub.payments.append(new_payment) # Legăm plata de abonament
-            db_payments.append(new_payment)      # O salvăm și în DB-ul general de plăți
+            db.add(new_sub_db)
+            
+            num_payments = fake.random_int(min=1, max=3)
+            payments_pydantic = []
+            
+            for _ in range(num_payments):
+                payment_id = str(uuid4())
+                amount = new_sub_db.monthlyCost
+                date = fake.date_between(start_date='-1y', end_date='today').isoformat()
+                
+                new_payment_db = PaymentDB(
+                    id=payment_id,
+                    amount=amount,
+                    date=date,
+                    subscription_id=sub_id
+                )
+                db.add(new_payment_db)
+                
+                payments_pydantic.append(Payment(
+                    id=payment_id, amount=amount, date=date, subscription_id=sub_id
+                ))
 
-        # 3. Salvăm și dăm broadcast
-        db_subscriptions.append(new_sub)
-        await manager.broadcast(new_sub.model_dump_json())
+            db.commit()
+
+            new_sub_pydantic = Subscription(
+                id=new_sub_db.id,
+                serviceName=new_sub_db.serviceName,
+                category=new_sub_db.category,
+                monthlyCost=new_sub_db.monthlyCost,
+                billingCycle=new_sub_db.billingCycle,
+                nextPayment=new_sub_db.nextPayment,
+                valueRating=new_sub_db.valueRating,
+                payments=payments_pydantic
+            )
+            
+            await manager.broadcast(new_sub_pydantic.model_dump_json())
