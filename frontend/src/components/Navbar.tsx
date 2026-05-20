@@ -74,9 +74,14 @@ export function Navbar() {
           {/* Secțiunea de Autentificare */}
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium leading-none">{user?.username}</p>
-                <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+            <div className="hidden sm:flex items-center gap-2 rounded-full border border-border/50 bg-secondary/40 px-3 py-1.5 backdrop-blur-sm">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full gradient-primary text-[10px] font-bold text-primary-foreground uppercase">
+                  {user?.username?.[0]}
+                </div>
+                <div className="text-left leading-tight">
+                  <p className="text-xs font-semibold gradient-text">{user?.username}</p>
+                  <p className="text-[10px] text-muted-foreground capitalize tracking-wide">{user?.role}</p>
+                </div>
               </div>
               {/* Buton Logout cu hover */}
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
