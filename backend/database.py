@@ -1,27 +1,19 @@
-from typing import List
-from models import Subscription, Payment
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-db_subscriptions: List[Subscription] = [
-    Subscription(
-        id="netflix-id-1", 
-        serviceName="Netflix", 
-        category="Entertainment", 
-        monthlyCost=15.99, 
-        billingCycle="Monthly", 
-        nextPayment="2024-05-15", 
-        valueRating=5, 
-        payments=[]
-    ),
-    Subscription(
-        id="spotify-id-2", 
-        serviceName="Spotify", 
-        category="Entertainment", 
-        monthlyCost=9.99, 
-        billingCycle="Monthly", 
-        nextPayment="2024-05-10", 
-        valueRating=4, 
-        payments=[]
-    )
-]
+SQLALCHEMY_DATABASE_URL = "sqlite:///./subsync.db"
 
-db_payments: List[Payment] = []
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
