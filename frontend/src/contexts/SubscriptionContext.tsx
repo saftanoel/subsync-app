@@ -251,12 +251,23 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
     try {
       if (isOnline) {
-        await fetch(`http://127.0.0.1:8000/subscriptions/${id}?username=${username}`, {
+        const res = await fetch(`http://127.0.0.1:8000/subscriptions/${id}?username=${username}`, {
           method: "DELETE"
         });
+        if (res.ok || res.status === 204) {
+          // Remove from state AND purge from localStorage so it can't be
+          // resurrected on the next syncWithServer merge pass.
+          setSubscriptions(prev => {
+            const updated = prev.filter(s => s.id !== id);
+            localStorage.setItem("subsync_data", JSON.stringify(updated));
+            return updated;
+          });
+          return;
+        }
       }
+      // Offline path — remove from state only (will sync later)
       setSubscriptions(prev => prev.filter(s => s.id !== id));
-      if (!isOnline) toast.info("Ștergerea a fost salvată local. Se va sincroniza automat.");
+      toast.info("Ștergerea a fost salvată local. Se va sincroniza automat.");
     } catch (error) {
       console.error("Failed to delete subscription:", error);
     }
