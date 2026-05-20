@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { ArrowRight, TrendingDown, PieChart, Shield } from "lucide-react";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { cn } from "@/lib/utils";

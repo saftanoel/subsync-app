@@ -4,6 +4,7 @@ import { SubscriptionTable } from "@/components/SubscriptionTable";
 import { StatsCharts } from "@/components/StatsCharts";
 import { SubscriptionForm } from "@/components/SubscriptionForm";
 import { SubscriptionDetail } from "@/components/SubscriptionDetail";
+import { ChatComponent } from "@/components/ChatComponent";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, DollarSign, CreditCard, TrendingUp, WifiOff } from "lucide-react";
@@ -119,8 +120,9 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 flex flex-col gap-6">
           <StatsCharts />
+          <ChatComponent />
         </div>
       </div>
 

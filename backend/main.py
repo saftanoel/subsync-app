@@ -12,21 +12,23 @@ from services import manager, generate_fake_data
 import services
 from strawberry.fastapi import GraphQLRouter
 from schema import schema
+from mongo_db import insert_message, get_recent_messages
 
 app = FastAPI(
     title="SubSync API",
     description="Backend refactorizat pentru Gold Challenge",
-    version="3.0.0"
+    version="3.0.0",
 )
 
-# Middleware pentru CORS 
+# Middleware pentru CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-)   
+)
+
 
 # websockets and generator endpoints
 @app.websocket("/ws")
@@ -38,6 +40,7 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
+
 @app.post("/start-generator")
 async def start_generator():
     if services.is_generating:
@@ -46,17 +49,20 @@ async def start_generator():
     asyncio.create_task(generate_fake_data())
     return "Generator started successfully"
 
+
 @app.post("/stop-generator")
 async def stop_generator():
     if not services.is_generating:
         return {"message": "Generator is not running"}
     services.is_generating = False
-    return  "Generator stopped successfully"
+    return "Generator stopped successfully"
+
 
 # ── Auth endpoints ──────────────────────────────────────────────────────────────
 class LoginRequest(BaseModel):
     username: str
     password: str
+
 
 @app.post("/login")
 def login(payload: LoginRequest):
@@ -68,14 +74,61 @@ def login(payload: LoginRequest):
         if not user or user.password != payload.password:
             raise HTTPException(status_code=401, detail="Invalid username or password")
         return {
-            "id":       user.id,
+            "id": user.id,
             "username": user.username,
-            "role":     user.role.name if user.role else None,
+            "role": user.role.name if user.role else None,
         }
+
+
+# --- CHAT WEBSOCKET MANAGER ---
+class ChatConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: dict):
+        for connection in self.active_connections:
+            await connection.send_json(message)
+
+
+chat_manager = ChatConnectionManager()
+
+
+@app.websocket("/ws/chat/{username}")
+async def chat_endpoint(websocket: WebSocket, username: str):
+    await chat_manager.connect(websocket)
+    try:
+        # 1. Când se conectează un user, îi trimitem istoricul din MongoDB
+        history = await get_recent_messages()
+        for msg in history:
+            await websocket.send_json(msg)
+
+        # 2. Așteptăm mesaje noi de la acest user
+        while True:
+            # Primim textul de la client
+            data = await websocket.receive_text()
+
+            # Salvăm mesajul în MongoDB
+            saved_msg = await insert_message(sender_username=username, text=data)
+
+            # Trimitem mesajul salvat tuturor userilor conectați
+            await chat_manager.broadcast(saved_msg)
+
+    except WebSocketDisconnect:
+        chat_manager.disconnect(websocket)
+
 
 # rest api endpoints (păstrate pentru compatibilitatea cu testele unitare)
 @app.get("/subscriptions", response_model=List[Subscription])
-def get_all_subscriptions(skip: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=100)):
+def get_all_subscriptions(
+    skip: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=100)
+):
     with SessionLocal() as db:
         subs = db.query(SubscriptionDB).offset(skip).limit(limit).all()
         return [
@@ -87,9 +140,19 @@ def get_all_subscriptions(skip: int = Query(0, ge=0), limit: int = Query(10, ge=
                 billingCycle=sub.billingCycle,
                 nextPayment=sub.nextPayment,
                 valueRating=sub.valueRating,
-                payments=[Payment(id=p.id, amount=p.amount, date=p.date, subscription_id=p.subscription_id) for p in sub.payments]
-            ) for sub in subs
+                payments=[
+                    Payment(
+                        id=p.id,
+                        amount=p.amount,
+                        date=p.date,
+                        subscription_id=p.subscription_id,
+                    )
+                    for p in sub.payments
+                ],
+            )
+            for sub in subs
         ]
+
 
 @app.get("/subscriptions/{sub_id}", response_model=Subscription)
 def get_subscription(sub_id: str):
@@ -105,8 +168,17 @@ def get_subscription(sub_id: str):
             billingCycle=sub.billingCycle,
             nextPayment=sub.nextPayment,
             valueRating=sub.valueRating,
-            payments=[Payment(id=p.id, amount=p.amount, date=p.date, subscription_id=p.subscription_id) for p in sub.payments]
+            payments=[
+                Payment(
+                    id=p.id,
+                    amount=p.amount,
+                    date=p.date,
+                    subscription_id=p.subscription_id,
+                )
+                for p in sub.payments
+            ],
         )
+
 
 @app.post("/subscriptions", response_model=Subscription, status_code=201)
 def create_subscription(sub_in: SubscriptionCreate):
@@ -123,8 +195,9 @@ def create_subscription(sub_in: SubscriptionCreate):
             billingCycle=new_sub.billingCycle,
             nextPayment=new_sub.nextPayment,
             valueRating=new_sub.valueRating,
-            payments=[]
+            payments=[],
         )
+
 
 @app.put("/subscriptions/{sub_id}", response_model=Subscription)
 def update_subscription(sub_id: str, sub_in: SubscriptionUpdate):
@@ -132,11 +205,11 @@ def update_subscription(sub_id: str, sub_in: SubscriptionUpdate):
         sub = db.query(SubscriptionDB).filter(SubscriptionDB.id == sub_id).first()
         if not sub:
             raise HTTPException(status_code=404, detail="Subscription not found")
-        
+
         update_data = sub_in.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             setattr(sub, key, value)
-            
+
         db.commit()
         db.refresh(sub)
         return Subscription(
@@ -147,8 +220,17 @@ def update_subscription(sub_id: str, sub_in: SubscriptionUpdate):
             billingCycle=sub.billingCycle,
             nextPayment=sub.nextPayment,
             valueRating=sub.valueRating,
-            payments=[Payment(id=p.id, amount=p.amount, date=p.date, subscription_id=p.subscription_id) for p in sub.payments]
+            payments=[
+                Payment(
+                    id=p.id,
+                    amount=p.amount,
+                    date=p.date,
+                    subscription_id=p.subscription_id,
+                )
+                for p in sub.payments
+            ],
         )
+
 
 @app.delete("/subscriptions/{sub_id}", status_code=204)
 def delete_subscription(sub_id: str):
@@ -158,6 +240,7 @@ def delete_subscription(sub_id: str):
             raise HTTPException(status_code=404, detail="Subscription not found")
         db.delete(sub)
         db.commit()
+
 
 # graphql endpoint
 graphql_app = GraphQLRouter(schema)
