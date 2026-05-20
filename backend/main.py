@@ -12,7 +12,8 @@ from services import manager, generate_fake_data
 import services
 from strawberry.fastapi import GraphQLRouter
 from schema import schema
-from mongo_db import insert_message, get_recent_messages
+from mongo_db import insert_message, get_recent_messages, insert_audit_log, get_all_flagged_users
+from security_analysis import check_malicious_behavior
 
 app = FastAPI(
     title="SubSync API",
@@ -233,13 +234,23 @@ def update_subscription(sub_id: str, sub_in: SubscriptionUpdate):
 
 
 @app.delete("/subscriptions/{sub_id}", status_code=204)
-def delete_subscription(sub_id: str):
+async def delete_subscription(sub_id: str, username: str = Query("unknown")):
     with SessionLocal() as db:
         sub = db.query(SubscriptionDB).filter(SubscriptionDB.id == sub_id).first()
         if not sub:
             raise HTTPException(status_code=404, detail="Subscription not found")
         db.delete(sub)
         db.commit()
+    
+    # Gold Challenge: Audit Logging and Anomaly Detection
+    await insert_audit_log(username, "DELETE_SUBSCRIPTION", f"Deleted subscription {sub_id}")
+    await check_malicious_behavior(username)
+
+
+@app.get("/admin/flagged-users")
+async def get_flagged_users():
+    """Retrieve all flagged users from MongoDB (Gold Challenge)."""
+    return await get_all_flagged_users()
 
 
 # graphql endpoint

@@ -5,12 +5,15 @@ import { StatsCharts } from "@/components/StatsCharts";
 import { SubscriptionForm } from "@/components/SubscriptionForm";
 import { SubscriptionDetail } from "@/components/SubscriptionDetail";
 import { ChatComponent } from "@/components/ChatComponent";
+import { AdminObservationList } from "@/components/AdminObservationList";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, DollarSign, CreditCard, TrendingUp, WifiOff } from "lucide-react";
 import type { Subscription } from "@/types/subscription";
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   // GOLD CHALLENGE: Am adus isLoading, hasMore și loadMore din Context
   const { subscriptions, isOnline, isLoading, hasMore, loadMore } = useSubscriptions();
   const [showForm, setShowForm] = useState(false);
@@ -120,8 +123,9 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 flex flex-col gap-6">
           <StatsCharts />
+          {user?.role === "admin" && <AdminObservationList />}
         </div>
       </div>
 
