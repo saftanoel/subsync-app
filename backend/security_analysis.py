@@ -1,5 +1,5 @@
 from datetime import datetime, timezone, timedelta
-from mongo_db import audit_logs, flagged_users
+from mongo_db import get_db
 
 async def check_malicious_behavior(username: str):
     """
@@ -7,6 +7,10 @@ async def check_malicious_behavior(username: str):
     3 or more 'DELETE_SUBSCRIPTION' actions within the last 10 seconds.
     If so, insert a document into the flagged_users collection.
     """
+    db = get_db()
+    audit_logs = db["audit_logs"]
+    flagged_users = db["flagged_users"]
+    
     ten_seconds_ago = (datetime.now(timezone.utc) - timedelta(seconds=10)).isoformat()
     
     # Count how many DELETE_SUBSCRIPTION actions the user performed in the last 10 seconds
