@@ -74,16 +74,18 @@ export function Navbar() {
           {/* Secțiunea de Autentificare */}
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">
-                {user?.name}
-              </span>
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-medium leading-none">{user?.username}</p>
+                <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+              </div>
               {/* Buton Logout cu hover */}
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={logout}
+                  onClick={() => { logout(); navigate("/login"); }}
                   className="text-muted-foreground hover:text-destructive"
+                  title="Logout"
                 >
                   <LogOut className="h-4 w-4" />
                 </Button>
