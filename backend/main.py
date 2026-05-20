@@ -1,12 +1,13 @@
 from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from typing import List
 from uuid import uuid4
 import asyncio
 
 from models import Subscription, SubscriptionCreate, SubscriptionUpdate, Payment
 from database import SessionLocal
-from models_db import SubscriptionDB
+from models_db import SubscriptionDB, UserDB
 from services import manager, generate_fake_data
 import services
 from strawberry.fastapi import GraphQLRouter
@@ -51,6 +52,26 @@ async def stop_generator():
         return {"message": "Generator is not running"}
     services.is_generating = False
     return  "Generator stopped successfully"
+
+# ── Auth endpoints ──────────────────────────────────────────────────────────────
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+@app.post("/login")
+def login(payload: LoginRequest):
+    """Plain-text login for Silver Challenge (no tokens yet).
+    Returns user id, username, and role name on success.
+    """
+    with SessionLocal() as db:
+        user = db.query(UserDB).filter(UserDB.username == payload.username).first()
+        if not user or user.password != payload.password:
+            raise HTTPException(status_code=401, detail="Invalid username or password")
+        return {
+            "id":       user.id,
+            "username": user.username,
+            "role":     user.role.name if user.role else None,
+        }
 
 # rest api endpoints (păstrate pentru compatibilitatea cu testele unitare)
 @app.get("/subscriptions", response_model=List[Subscription])
