@@ -120,9 +120,8 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="lg:col-span-2 flex flex-col gap-6">
+        <div className="lg:col-span-2">
           <StatsCharts />
-          <ChatComponent />
         </div>
       </div>
 
@@ -143,6 +142,8 @@ export default function DashboardPage() {
           />
         )}
       </AnimatePresence>
+
+      <ChatComponent />
     </div>
   );
 }
