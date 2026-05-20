@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useSubscriptions } from "@/contexts/SubscriptionContext";
+import { useSubscriptions } from "@/hooks/useSubscriptions";
 import { SubscriptionTable } from "@/components/SubscriptionTable";
 import { StatsCharts } from "@/components/StatsCharts";
 import { SubscriptionForm } from "@/components/SubscriptionForm";

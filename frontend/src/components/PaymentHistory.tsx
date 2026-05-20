@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { toast } from "sonner";
 import { History, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSubscriptions } from "@/contexts/SubscriptionContext"; // 1. IMPORTĂM CREIERUL GLOBAL
+import { useSubscriptions } from "@/hooks/useSubscriptions"; // 1. IMPORTĂM CREIERUL GLOBAL
 
 interface Payment {
   id: string;
