@@ -5,6 +5,7 @@ import { StatsCharts } from "@/components/StatsCharts";
 import { SubscriptionForm } from "@/components/SubscriptionForm";
 import { SubscriptionDetail } from "@/components/SubscriptionDetail";
 import { ChatComponent } from "@/components/ChatComponent";
+import { DataGenerator } from "@/components/DataGenerator";
 import { AdminObservationList } from "@/components/AdminObservationList";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,10 @@ export default function DashboardPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <div className="mb-6">
+        <DataGenerator />
+      </div>
 
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s, i) => (

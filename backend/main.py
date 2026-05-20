@@ -12,7 +12,12 @@ from services import manager, generate_fake_data
 import services
 from strawberry.fastapi import GraphQLRouter
 from schema import schema
-from mongo_db import insert_message, get_recent_messages, insert_audit_log, get_all_flagged_users
+from mongo_db import (
+    insert_message,
+    get_recent_messages,
+    insert_audit_log,
+    get_all_flagged_users,
+)
 from security_analysis import check_malicious_behavior
 
 app = FastAPI(
@@ -235,16 +240,24 @@ def update_subscription(sub_id: str, sub_in: SubscriptionUpdate):
 
 @app.delete("/subscriptions/{sub_id}", status_code=204)
 async def delete_subscription(sub_id: str, username: str = Query("unknown")):
+    # 1. Ștergem abonamentul din SQLite
     with SessionLocal() as db:
         sub = db.query(SubscriptionDB).filter(SubscriptionDB.id == sub_id).first()
         if not sub:
             raise HTTPException(status_code=404, detail="Subscription not found")
+
         db.delete(sub)
-        db.commit()
-    
-    # Gold Challenge: Audit Logging and Anomaly Detection
-    await insert_audit_log(username, "DELETE_SUBSCRIPTION", f"Deleted subscription {sub_id}")
-    await check_malicious_behavior(username)
+        db.commit()  # Asigurăm persistența ștergerii în baza de date
+
+    # 2. Gold Challenge: Audit Logging and Anomaly Detection (Protejat)
+    try:
+        await insert_audit_log(
+            username, "DELETE_SUBSCRIPTION", f"Deleted subscription {sub_id}"
+        )
+        await check_malicious_behavior(username)
+    except Exception as e:
+        # Dacă MongoDB pică, măcar ștergerea abonamentului s-a salvat!
+        print(f"Error during MongoDB audit logging: {e}")
 
 
 @app.get("/admin/flagged-users")
