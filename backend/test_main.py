@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from main import app, db_subscriptions
+from main import app
 
 client = TestClient(app)
 
@@ -28,7 +28,11 @@ def test_get_all_subscriptions_with_pagination():
     assert len(data) <= 1 
 
 def test_get_single_subscription():
-    sub_id = db_subscriptions[0].id
+    create_resp = client.post("/subscriptions", json={
+        "serviceName": "Single", "category": "Misc", "monthlyCost": 1.0, 
+        "billingCycle": "Monthly", "nextPayment": "2024", "valueRating": 1
+    })
+    sub_id = create_resp.json()["id"]
     response = client.get(f"/subscriptions/{sub_id}")
     assert response.status_code == 200
     assert response.json()["id"] == sub_id
@@ -38,7 +42,11 @@ def test_get_nonexistent_subscription():
     assert response.status_code == 404
 
 def test_update_subscription():
-    sub_id = db_subscriptions[0].id
+    create_resp = client.post("/subscriptions", json={
+        "serviceName": "To Update", "category": "Misc", "monthlyCost": 1.0, 
+        "billingCycle": "Monthly", "nextPayment": "2024", "valueRating": 1
+    })
+    sub_id = create_resp.json()["id"]
     response = client.put(
         f"/subscriptions/{sub_id}",
         json={"monthlyCost": 99.99} 
