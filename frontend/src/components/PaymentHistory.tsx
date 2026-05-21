@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { toast } from "sonner";
 import { History, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSubscriptions } from "@/hooks/useSubscriptions"; // 1. IMPORTĂM CREIERUL GLOBAL
+import { useSubscriptions } from "@/hooks/useSubscriptions";
+import { API_BASE } from "@/config/api"; // 1. IMPORTĂM CREIERUL GLOBAL
 
 interface Payment {
   id: string;
@@ -42,7 +43,7 @@ export function PaymentHistory({ subscriptionId, payments: initialPayments }: Pa
     `;
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/graphql", {
+      const res = await fetch(`${API_BASE}/graphql`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query })
@@ -89,7 +90,7 @@ export function PaymentHistory({ subscriptionId, payments: initialPayments }: Pa
     `;
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/graphql", {
+      const res = await fetch(`${API_BASE}/graphql`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query })

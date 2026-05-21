@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { DatabaseZap, Square, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { API_BASE } from "@/config/api";
 
 export function DataGenerator() {
   const [isRunning, setIsRunning] = useState(false);
@@ -11,7 +12,7 @@ export function DataGenerator() {
   const handleStart = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/start-generator", {
+      const res = await fetch(`${API_BASE}/start-generator`, {
         method: "POST",
       });
       if (res.ok) {
@@ -30,7 +31,7 @@ export function DataGenerator() {
   const handleStop = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/stop-generator", {
+      const res = await fetch(`${API_BASE}/stop-generator`, {
         method: "POST",
       });
       if (res.ok) {

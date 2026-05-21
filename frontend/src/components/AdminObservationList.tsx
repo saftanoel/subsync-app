@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, ShieldAlert, Clock, UserX } from "lucide-react";
 import { motion } from "framer-motion";
+import { API_BASE } from "@/config/api";
 
 interface FlaggedUser {
   _id: string;
@@ -16,7 +17,7 @@ export function AdminObservationList() {
   useEffect(() => {
     const fetchFlaggedUsers = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/admin/flagged-users");
+        const res = await fetch(`${API_BASE}/admin/flagged-users`);
         if (res.ok) {
           const data = await res.json();
           setFlaggedUsers(data);

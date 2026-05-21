@@ -6,13 +6,13 @@ Database : subsync
 Collections: messages, audit_logs, flagged_users
 """
 
+import asyncio
 from datetime import datetime, timezone
 import motor.motor_asyncio
 
 MONGO_URL = "mongodb://localhost:27017"
 DB_NAME   = "subsync"
 
-import asyncio
 
 # Map event loop to Motor client to prevent "Event loop is closed" errors in Pytest
 _clients = {}

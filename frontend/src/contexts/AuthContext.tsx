@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
+import { API_BASE } from "@/config/api";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 // Updated to match the shape returned by POST /login on the backend
@@ -35,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // ── Login: hits the real backend endpoint ───────────────────────────────────
   const login = useCallback(async (username: string, password: string): Promise<boolean> => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/login", {
+      const res = await fetch(`${API_BASE}/login`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ username, password }),
