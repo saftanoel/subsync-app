@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import Cookies from "js-cookie";
 import type { Subscription } from "@/types/subscription";
-import { toast } from "sonner"; 
+import { toast } from "sonner";
+import { API_BASE, WS_BASE } from "@/config/api"; 
 
 interface SubscriptionContextType {
   subscriptions: Subscription[];
@@ -63,7 +64,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       }
     `;
 
-    const res = await fetch("http://127.0.0.1:8000/graphql", {
+    const res = await fetch(`${API_BASE}/graphql`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query })
@@ -186,7 +187,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
       syncWithServer(false, LIMIT, true);
 
-      ws = new WebSocket("ws://127.0.0.1:8000/ws");
+      ws = new WebSocket(`${WS_BASE}/ws`);
 
       ws.onopen = () => setIsOnline(true);
 
@@ -219,7 +220,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const addSubscription = useCallback(async (sub: Omit<Subscription, "id">) => {
     try {
       if (isOnline) {
-        const res = await fetch("http://127.0.0.1:8000/subscriptions", {
+        const res = await fetch(`${API_BASE}/subscriptions`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(sub)
@@ -251,7 +252,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
     try {
       if (isOnline) {
-        const res = await fetch(`http://127.0.0.1:8000/subscriptions/${id}?username=${username}`, {
+        const res = await fetch(`${API_BASE}/subscriptions/${id}?username=${username}`, {
           method: "DELETE"
         });
         if (res.ok || res.status === 204) {

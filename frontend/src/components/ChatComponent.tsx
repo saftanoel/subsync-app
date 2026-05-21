@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Send, MessageSquare, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { API_BASE, WS_BASE } from "@/config/api";
 
 interface ChatMessage {
   _id?: string;
@@ -37,7 +38,7 @@ export function ChatComponent() {
   useEffect(() => {
     if (!user?.username) return;
 
-    const wsUrl = `ws://127.0.0.1:8000/ws/chat/${user.username}`;
+    const wsUrl = `${WS_BASE}/ws/chat/${user.username}`;
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
