@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useSubscriptions } from "@/contexts/SubscriptionContext";
+import { useSubscriptions } from "@/hooks/useSubscriptions";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Pencil, Trash2, ChevronLeft, ChevronRight, ArrowUpDown, Star, List, Layers } from "lucide-react";

@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import Cookies from "js-cookie";
 import type { Subscription } from "@/types/subscription";
-import { toast } from "sonner"; 
+import { toast } from "sonner";
+import { API_BASE, WS_BASE } from "@/config/api"; 
 
 interface SubscriptionContextType {
   subscriptions: Subscription[];
@@ -17,7 +18,7 @@ interface SubscriptionContextType {
   isLoading: boolean;
 }
 
-const SubscriptionContext = createContext<SubscriptionContextType | null>(null);
+export const SubscriptionContext = createContext<SubscriptionContextType | null>(null);
 
 const LIMIT = 10; 
 
@@ -37,27 +38,6 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   // Prefetching
   const [prefetchedData, setPrefetchedData] = useState<Subscription[]>([]);
 
-  // --- FIX PENTRU NETWORK (F12 Offline) ---
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      toast.success("Conexiunea a fost restabilită. Sincronizăm datele...");
-      syncWithServer(false, 0); // Re-sincronizăm prima pagină când revine netul
-    };
-
-    const handleOffline = () => {
-      setIsOnline(false);
-      toast.error("Ai trecut în modul Offline! Modificările se salvează local.");
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []); // Se rulează o singură dată la mount
 
   useEffect(() => {
     localStorage.setItem("subsync_data", JSON.stringify(subscriptions));
@@ -84,7 +64,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       }
     `;
 
-    const res = await fetch("http://127.0.0.1:8000/graphql", {
+    const res = await fetch(`${API_BASE}/graphql`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query })
@@ -145,6 +125,29 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
+  // --- FIX PENTRU NETWORK (F12 Offline) ---
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      toast.success("Conexiunea a fost restabilită. Sincronizăm datele...");
+      syncWithServer(false, 0); // Re-sincronizăm prima pagină când revine netul
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      toast.error("Ai trecut în modul Offline! Modificările se salvează local.");
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [syncWithServer]); // Se rulează o singură dată la mount, plus când se schimbă syncWithServer
+
+
   const loadMore = useCallback(() => {
     if (!isLoading && hasMore && isOnline) {
       const nextSkip = skip + LIMIT;
@@ -184,7 +187,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
       syncWithServer(false, LIMIT, true);
 
-      ws = new WebSocket("ws://127.0.0.1:8000/ws");
+      ws = new WebSocket(`${WS_BASE}/ws`);
 
       ws.onopen = () => setIsOnline(true);
 
@@ -214,10 +217,27 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }, [syncWithServer]);
 
   
-  const addSubscription = useCallback((sub: Omit<Subscription, "id">) => {
-    const newSub = { ...sub, id: String(Date.now()), payments: [] };
-    setSubscriptions(prev => [newSub, ...prev]);
-    if (!isOnline) toast.info("Salvat local. Se va sincroniza automat.");
+  const addSubscription = useCallback(async (sub: Omit<Subscription, "id">) => {
+    try {
+      if (isOnline) {
+        const res = await fetch(`${API_BASE}/subscriptions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(sub)
+        });
+        if (res.ok) {
+          const newSub = await res.json();
+          setSubscriptions(prev => [newSub, ...prev]);
+          return;
+        }
+      }
+      // Fallback local creation
+      const localSub = { ...sub, id: String(Date.now()), payments: [] };
+      setSubscriptions(prev => [localSub, ...prev]);
+      if (!isOnline) toast.info("Salvat local. Se va sincroniza automat.");
+    } catch (error) {
+      console.error("Failed to add subscription:", error);
+    }
   }, [isOnline]);
 
   const updateSubscription = useCallback((id: string, updates: Partial<Omit<Subscription, "id">>) => {
@@ -225,9 +245,33 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     if (!isOnline) toast.info("Modificările au fost salvate local. Se vor sincroniza automat.");
   }, [isOnline]);
 
-  const deleteSubscription = useCallback((id: string) => {
-    setSubscriptions(prev => prev.filter(s => s.id !== id));
-    if (!isOnline) toast.info("Ștergerea a fost salvată local. Se va sincroniza automat.");
+  const deleteSubscription = useCallback(async (id: string) => {
+    const savedUser = localStorage.getItem("subsync_user");
+    const user = savedUser ? JSON.parse(savedUser) : null;
+    const username = user?.username || "unknown";
+
+    try {
+      if (isOnline) {
+        const res = await fetch(`${API_BASE}/subscriptions/${id}?username=${username}`, {
+          method: "DELETE"
+        });
+        if (res.ok || res.status === 204) {
+          // Remove from state AND purge from localStorage so it can't be
+          // resurrected on the next syncWithServer merge pass.
+          setSubscriptions(prev => {
+            const updated = prev.filter(s => s.id !== id);
+            localStorage.setItem("subsync_data", JSON.stringify(updated));
+            return updated;
+          });
+          return;
+        }
+      }
+      // Offline path — remove from state only (will sync later)
+      setSubscriptions(prev => prev.filter(s => s.id !== id));
+      toast.info("Ștergerea a fost salvată local. Se va sincroniza automat.");
+    } catch (error) {
+      console.error("Failed to delete subscription:", error);
+    }
   }, [isOnline]);
 
   const getSubscription = useCallback((id: string) => subscriptions.find(s => s.id === id), [subscriptions]);
@@ -246,9 +290,3 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     </SubscriptionContext.Provider>
   );
 }
-
-export const useSubscriptions = () => {
-  const ctx = useContext(SubscriptionContext);
-  if (!ctx) throw new Error("useSubscriptions must be used within SubscriptionProvider");
-  return ctx;
-};
