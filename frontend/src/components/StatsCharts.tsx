@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useSubscriptions } from "@/contexts/SubscriptionContext";
+import { useSubscriptions } from "@/hooks/useSubscriptions";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { motion } from "framer-motion";
 

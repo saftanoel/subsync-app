@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { motion } from "framer-motion";
@@ -74,16 +74,23 @@ export function Navbar() {
           {/* Secțiunea de Autentificare */}
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">
-                {user?.name}
-              </span>
+            <div className="hidden sm:flex items-center gap-2 rounded-full border border-border/50 bg-secondary/40 px-3 py-1.5 backdrop-blur-sm">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full gradient-primary text-[10px] font-bold text-primary-foreground uppercase">
+                  {user?.username?.[0]}
+                </div>
+                <div className="text-left leading-tight">
+                  <p className="text-xs font-semibold gradient-text">{user?.username}</p>
+                  <p className="text-[10px] text-muted-foreground capitalize tracking-wide">{user?.role}</p>
+                </div>
+              </div>
               {/* Buton Logout cu hover */}
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={logout}
+                  onClick={() => { logout(); navigate("/login"); }}
                   className="text-muted-foreground hover:text-destructive"
+                  title="Logout"
                 >
                   <LogOut className="h-4 w-4" />
                 </Button>

@@ -1,26 +1,41 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
-import { Monitor } from "lucide-react";
+import { Monitor, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    if (!email || !password) { setError("All fields are required."); return; }
-    const ok = login(email, password);
-    if (ok) navigate("/dashboard");
-    else setError("Invalid email or password. Try demo@subsync.com / password123");
+    if (!username || !password) {
+      toast.error("All fields are required.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const ok = await login(username, password);
+      if (ok) {
+        toast.success("Welcome back!");
+        navigate("/dashboard");
+      } else {
+        toast.error("Invalid username or password.");
+      }
+    } catch {
+      toast.error("Could not connect to server. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -41,20 +56,49 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="demo@subsync.com" className="bg-secondary/50 border-border" />
+            <Label htmlFor="username">Username</Label>
+            <Input
+              id="username"
+              type="text"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              placeholder="admin_user"
+              className="bg-secondary/50 border-border"
+              disabled={isLoading}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="bg-secondary/50 border-border" />
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="bg-secondary/50 border-border"
+              disabled={isLoading}
+            />
           </div>
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
-
-          <Button type="submit" className="w-full gradient-primary text-primary-foreground font-semibold glow-primary">
-            Login
+          <Button
+            type="submit"
+            className="w-full gradient-primary text-primary-foreground font-semibold glow-primary"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing in...</>
+            ) : (
+              "Login"
+            )}
           </Button>
         </form>
+
+        {/* Hint for the demo credentials */}
+        <div className="mt-4 rounded-lg bg-secondary/40 px-4 py-3 text-xs text-muted-foreground space-y-1">
+          <p className="font-semibold text-foreground">Demo credentials</p>
+          <p>Admin: <span className="text-primary font-mono">admin_user / admin123</span></p>
+          <p>User: &nbsp;<span className="text-primary font-mono">normal_user / user123</span></p>
+        </div>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Don't have an account?{" "}
