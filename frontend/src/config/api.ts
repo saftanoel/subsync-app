@@ -9,4 +9,4 @@
  */
 
 export const API_BASE = "https://baggy-renderer-canned.ngrok-free.dev";
-export const WS_BASE  = "wws://baggy-renderer-canned.ngrok-free.dev";
+export const WS_BASE  = "wss://baggy-renderer-canned.ngrok-free.dev";
