@@ -1,24 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
+import { AuthContext, User } from "@/contexts/authContextDef";
 import { API_BASE } from "@/config/api";
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-// Updated to match the shape returned by POST /login on the backend
-interface User {
-  id:       string;
-  username: string;
-  role:     string;   // 'admin' | 'user'
-}
-
-interface AuthContextType {
-  user:            User | null;
-  isAuthenticated: boolean;
-  login:           (username: string, password: string) => Promise<boolean>;
-  logout:          () => void;
-  // kept so RegisterPage / other callers that still use it don't break
-  register:        (name: string, email: string, password: string) => boolean;
-}
-
-export const AuthContext = createContext<AuthContextType | null>(null);
 
 const STORAGE_KEY = "subsync_user";
 

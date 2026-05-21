@@ -1,24 +1,10 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Cookies from "js-cookie";
 import type { Subscription } from "@/types/subscription";
 import { toast } from "sonner";
-import { API_BASE, WS_BASE } from "@/config/api"; 
-
-interface SubscriptionContextType {
-  subscriptions: Subscription[];
-  isOnline: boolean;
-  addSubscription: (sub: Omit<Subscription, "id">) => void;
-  updateSubscription: (id: string, sub: Partial<Omit<Subscription, "id">>) => void;
-  deleteSubscription: (id: string) => void;
-  getSubscription: (id: string) => Subscription | undefined;
-  sortColumn: string;
-  setSortColumn: (col: string) => void;
-  hasMore: boolean;
-  loadMore: () => void;
-  isLoading: boolean;
-}
-
-export const SubscriptionContext = createContext<SubscriptionContextType | null>(null);
+import { API_BASE, WS_BASE } from "@/config/api";
+import { SubscriptionContext } from "@/contexts/subscriptionContextDef";
+import type { SubscriptionContextType } from "@/contexts/subscriptionContextDef";
 
 const LIMIT = 10; 
 
