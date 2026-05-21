@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: e2e.spec.ts >> SubSync SDI Assignment - Silver & Gold >> Silver: Feature 3 - Delete Subscription
-- Location: tests/e2e.spec.ts:120:3
+- Name: e2e.spec.ts >> SubSync SDI Assignment - Silver & Gold >> Gold: Charts update automatically when tabular data changes
+- Location: tests/e2e.spec.ts:131:3
 
 # Error details
 
@@ -18,23 +18,13 @@ Test timeout of 30000ms exceeded.
 ```
 Error: locator.textContent: Test timeout of 30000ms exceeded.
 Call log:
-  - waiting for locator('tbody tr').first().locator('td').first()
+  - waiting for locator('.total-amount')
 
 ```
 
 # Test source
 
 ```ts
-  22  |       // Silently ignore
-  23  |     }
-  24  | 
-  25  |     // Clear existing subscriptions on localhost base
-  26  |     try {
-  27  |       const getRes = await request.get(`http://localhost:8000/subscriptions`);
-  28  |       if (getRes.ok()) {
-  29  |         const subs = await getRes.json();
-  30  |         for (const sub of subs) {
-  31  |           await request.delete(`http://localhost:8000/subscriptions/${sub.id}?username=admin_user`);
   32  |         }
   33  |       }
   34  |     } catch (e) {
@@ -125,8 +115,7 @@ Call log:
   119 | 
   120 |   test("Silver: Feature 3 - Delete Subscription", async ({ page }) => {
   121 |     const firstRow = page.locator("tbody tr").first();
-> 122 |     const subName = await firstRow.locator("td").first().textContent();
-      |                                                          ^ Error: locator.textContent: Test timeout of 30000ms exceeded.
+  122 |     const subName = await firstRow.locator("td").first().textContent();
   123 | 
   124 |     // Butonul e la finalul tabelului, pe mobil e greu vizibil. Folosim force.
   125 |     await firstRow.locator('button').last().click({ force: true });
@@ -136,7 +125,8 @@ Call log:
   129 | 
   130 |   // --- GOLD ---
   131 |   test("Gold: Charts update automatically when tabular data changes", async ({ page }) => {
-  132 |     const initialTotal = await page.locator(".total-amount").textContent();
+> 132 |     const initialTotal = await page.locator(".total-amount").textContent();
+      |                                                              ^ Error: locator.textContent: Test timeout of 30000ms exceeded.
   133 | 
   134 |     // La fel, force click pe delete
   135 |     await page.locator("tbody tr").first().locator('button').last().click({ force: true });

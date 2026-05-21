@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: e2e.spec.ts >> SubSync SDI Assignment - Silver & Gold >> Silver: Feature 3 - Delete Subscription
-- Location: tests/e2e.spec.ts:120:3
+- Name: e2e.spec.ts >> SubSync SDI Assignment - Silver & Gold >> Silver: Feature 2 - Master to Detail Navigation
+- Location: tests/e2e.spec.ts:112:3
 
 # Error details
 
@@ -25,6 +25,15 @@ Call log:
 # Test source
 
 ```ts
+  13  |       if (getRes.ok()) {
+  14  |         const subs = await getRes.json();
+  15  |         for (const sub of subs) {
+  16  |           await request.delete(`${apiBase}/subscriptions/${sub.id}?username=admin_user`, {
+  17  |             headers: { "ngrok-skip-browser-warning": "69420" }
+  18  |           });
+  19  |         }
+  20  |       }
+  21  |     } catch (e) {
   22  |       // Silently ignore
   23  |     }
   24  | 
@@ -116,7 +125,8 @@ Call log:
   110 |   });
   111 | 
   112 |   test("Silver: Feature 2 - Master to Detail Navigation", async ({ page }) => {
-  113 |     const firstName = await page.locator("tbody tr").first().locator("td").first().textContent();
+> 113 |     const firstName = await page.locator("tbody tr").first().locator("td").first().textContent();
+      |                                                                                    ^ Error: locator.textContent: Test timeout of 30000ms exceeded.
   114 |     await page.locator("tbody tr").first().click({ force: true });
   115 |     
   116 |     const modalTitle = page.locator("h2").filter({ hasText: firstName || "" });
@@ -125,8 +135,7 @@ Call log:
   119 | 
   120 |   test("Silver: Feature 3 - Delete Subscription", async ({ page }) => {
   121 |     const firstRow = page.locator("tbody tr").first();
-> 122 |     const subName = await firstRow.locator("td").first().textContent();
-      |                                                          ^ Error: locator.textContent: Test timeout of 30000ms exceeded.
+  122 |     const subName = await firstRow.locator("td").first().textContent();
   123 | 
   124 |     // Butonul e la finalul tabelului, pe mobil e greu vizibil. Folosim force.
   125 |     await firstRow.locator('button').last().click({ force: true });

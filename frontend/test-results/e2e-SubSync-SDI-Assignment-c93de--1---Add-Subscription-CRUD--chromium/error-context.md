@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: e2e.spec.ts >> SubSync SDI Assignment - Silver & Gold >> Silver: Feature 3 - Delete Subscription
-- Location: tests/e2e.spec.ts:120:3
+- Name: e2e.spec.ts >> SubSync SDI Assignment - Silver & Gold >> Silver: Feature 1 - Add Subscription (CRUD)
+- Location: tests/e2e.spec.ts:101:3
 
 # Error details
 
@@ -16,15 +16,34 @@ Test timeout of 30000ms exceeded.
 ```
 
 ```
-Error: locator.textContent: Test timeout of 30000ms exceeded.
+Error: page.click: Test timeout of 30000ms exceeded.
 Call log:
-  - waiting for locator('tbody tr').first().locator('td').first()
+  - waiting for locator('button:has-text("Add Subscription")')
 
 ```
 
 # Test source
 
 ```ts
+  3   | test.describe("SubSync SDI Assignment - Silver & Gold", () => {
+  4   | 
+  5   |   test.beforeAll(async ({ request }) => {
+  6   |     const apiBase = "https://baggy-renderer-canned.ngrok-free.dev";
+  7   |     
+  8   |     // Clear existing subscriptions on ngrok base
+  9   |     try {
+  10  |       const getRes = await request.get(`${apiBase}/subscriptions`, {
+  11  |         headers: { "ngrok-skip-browser-warning": "69420" }
+  12  |       });
+  13  |       if (getRes.ok()) {
+  14  |         const subs = await getRes.json();
+  15  |         for (const sub of subs) {
+  16  |           await request.delete(`${apiBase}/subscriptions/${sub.id}?username=admin_user`, {
+  17  |             headers: { "ngrok-skip-browser-warning": "69420" }
+  18  |           });
+  19  |         }
+  20  |       }
+  21  |     } catch (e) {
   22  |       // Silently ignore
   23  |     }
   24  | 
@@ -106,7 +125,8 @@ Call log:
   100 | 
   101 |   test("Silver: Feature 1 - Add Subscription (CRUD)", async ({ page }) => {
   102 |     // Adăugat force: true pentru mobil
-  103 |     await page.click('button:has-text("Add Subscription")', { force: true });
+> 103 |     await page.click('button:has-text("Add Subscription")', { force: true });
+      |                ^ Error: page.click: Test timeout of 30000ms exceeded.
   104 |     await page.fill('input[placeholder="Netflix"]', "Disney Plus");
   105 |     await page.fill('input[placeholder="9.99"]', "13.99");
   106 |     await page.fill('input[type="date"]', "2026-04-15");
@@ -125,8 +145,7 @@ Call log:
   119 | 
   120 |   test("Silver: Feature 3 - Delete Subscription", async ({ page }) => {
   121 |     const firstRow = page.locator("tbody tr").first();
-> 122 |     const subName = await firstRow.locator("td").first().textContent();
-      |                                                          ^ Error: locator.textContent: Test timeout of 30000ms exceeded.
+  122 |     const subName = await firstRow.locator("td").first().textContent();
   123 | 
   124 |     // Butonul e la finalul tabelului, pe mobil e greu vizibil. Folosim force.
   125 |     await firstRow.locator('button').last().click({ force: true });
