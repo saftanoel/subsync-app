@@ -377,7 +377,7 @@ Call log:
                     - paragraph [ref=e433]: Bulk deletion suspected
                 - generic [ref=e434]:
                   - img [ref=e435]
-                  - text: May 21, 2026, 5:23 PM
+                  - text: May 21, 2026, 5:26 PM
               - generic [ref=e438]:
                 - generic [ref=e439]:
                   - img [ref=e441]
@@ -386,7 +386,7 @@ Call log:
                     - paragraph [ref=e448]: Bulk deletion suspected
                 - generic [ref=e449]:
                   - img [ref=e450]
-                  - text: May 21, 2026, 5:23 PM
+                  - text: May 21, 2026, 5:25 PM
               - generic [ref=e453]:
                 - generic [ref=e454]:
                   - img [ref=e456]
@@ -395,7 +395,7 @@ Call log:
                     - paragraph [ref=e463]: Bulk deletion suspected
                 - generic [ref=e464]:
                   - img [ref=e465]
-                  - text: May 21, 2026, 5:22 PM
+                  - text: May 21, 2026, 5:23 PM
               - generic [ref=e468]:
                 - generic [ref=e469]:
                   - img [ref=e471]
@@ -404,7 +404,7 @@ Call log:
                     - paragraph [ref=e478]: Bulk deletion suspected
                 - generic [ref=e479]:
                   - img [ref=e480]
-                  - text: May 21, 2026, 5:21 PM
+                  - text: May 21, 2026, 5:23 PM
               - generic [ref=e483]:
                 - generic [ref=e484]:
                   - img [ref=e486]
@@ -413,7 +413,7 @@ Call log:
                     - paragraph [ref=e493]: Bulk deletion suspected
                 - generic [ref=e494]:
                   - img [ref=e495]
-                  - text: May 21, 2026, 5:21 PM
+                  - text: May 21, 2026, 5:23 PM
               - generic [ref=e498]:
                 - generic [ref=e499]:
                   - img [ref=e501]
@@ -422,7 +422,7 @@ Call log:
                     - paragraph [ref=e508]: Bulk deletion suspected
                 - generic [ref=e509]:
                   - img [ref=e510]
-                  - text: May 21, 2026, 5:10 PM
+                  - text: May 21, 2026, 5:22 PM
               - generic [ref=e513]:
                 - generic [ref=e514]:
                   - img [ref=e516]
@@ -431,16 +431,16 @@ Call log:
                     - paragraph [ref=e523]: Bulk deletion suspected
                 - generic [ref=e524]:
                   - img [ref=e525]
-                  - text: May 21, 2026, 5:05 PM
+                  - text: May 21, 2026, 5:21 PM
               - generic [ref=e528]:
                 - generic [ref=e529]:
                   - img [ref=e531]
                   - generic [ref=e536]:
-                    - paragraph [ref=e537]: normal_user
+                    - paragraph [ref=e537]: admin_user
                     - paragraph [ref=e538]: Bulk deletion suspected
                 - generic [ref=e539]:
                   - img [ref=e540]
-                  - text: May 21, 2026, 4:25 PM
+                  - text: May 21, 2026, 5:21 PM
               - generic [ref=e543]:
                 - generic [ref=e544]:
                   - img [ref=e546]
@@ -449,37 +449,64 @@ Call log:
                     - paragraph [ref=e553]: Bulk deletion suspected
                 - generic [ref=e554]:
                   - img [ref=e555]
-                  - text: May 21, 2026, 4:20 PM
+                  - text: May 21, 2026, 5:10 PM
               - generic [ref=e558]:
                 - generic [ref=e559]:
                   - img [ref=e561]
                   - generic [ref=e566]:
-                    - paragraph [ref=e567]: normal_user
+                    - paragraph [ref=e567]: admin_user
                     - paragraph [ref=e568]: Bulk deletion suspected
                 - generic [ref=e569]:
                   - img [ref=e570]
-                  - text: May 21, 2026, 2:19 PM
+                  - text: May 21, 2026, 5:05 PM
               - generic [ref=e573]:
                 - generic [ref=e574]:
                   - img [ref=e576]
                   - generic [ref=e581]:
-                    - paragraph [ref=e582]: admin_user
+                    - paragraph [ref=e582]: normal_user
                     - paragraph [ref=e583]: Bulk deletion suspected
                 - generic [ref=e584]:
                   - img [ref=e585]
-                  - text: May 21, 2026, 2:02 PM
+                  - text: May 21, 2026, 4:25 PM
               - generic [ref=e588]:
                 - generic [ref=e589]:
                   - img [ref=e591]
                   - generic [ref=e596]:
-                    - paragraph [ref=e597]: normal_user
+                    - paragraph [ref=e597]: admin_user
                     - paragraph [ref=e598]: Bulk deletion suspected
                 - generic [ref=e599]:
                   - img [ref=e600]
+                  - text: May 21, 2026, 4:20 PM
+              - generic [ref=e603]:
+                - generic [ref=e604]:
+                  - img [ref=e606]
+                  - generic [ref=e611]:
+                    - paragraph [ref=e612]: normal_user
+                    - paragraph [ref=e613]: Bulk deletion suspected
+                - generic [ref=e614]:
+                  - img [ref=e615]
+                  - text: May 21, 2026, 2:19 PM
+              - generic [ref=e618]:
+                - generic [ref=e619]:
+                  - img [ref=e621]
+                  - generic [ref=e626]:
+                    - paragraph [ref=e627]: admin_user
+                    - paragraph [ref=e628]: Bulk deletion suspected
+                - generic [ref=e629]:
+                  - img [ref=e630]
+                  - text: May 21, 2026, 2:02 PM
+              - generic [ref=e633]:
+                - generic [ref=e634]:
+                  - img [ref=e636]
+                  - generic [ref=e641]:
+                    - paragraph [ref=e642]: normal_user
+                    - paragraph [ref=e643]: Bulk deletion suspected
+                - generic [ref=e644]:
+                  - img [ref=e645]
                   - text: May 21, 2026, 12:32 AM
-      - button [ref=e604] [cursor=pointer]:
+      - button [ref=e649] [cursor=pointer]:
         - img
-  - generic [ref=e605]: "6"
+  - generic [ref=e650]: "6"
 ```
 
 # Test source

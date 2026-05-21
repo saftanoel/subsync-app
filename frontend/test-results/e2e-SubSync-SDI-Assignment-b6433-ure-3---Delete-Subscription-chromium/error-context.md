@@ -15,15 +15,15 @@
 Error: expect(locator).not.toHaveText(expected) failed
 
 Locator:  locator('tbody tr').first().locator('td').first()
-Expected: not "Spotify"
-Received: "Spotify"
+Expected: not "Amazon Prime"
+Received: "Amazon Prime"
 Timeout:  5000ms
 
 Call log:
   - Expect "not toHaveText" with timeout 5000ms
   - waiting for locator('tbody tr').first().locator('td').first()
-    9 × locator resolved to <td class="px-4 py-3 font-medium">Spotify</td>
-      - unexpected value "Spotify"
+    9 × locator resolved to <td class="px-4 py-3 font-medium">Amazon Prime</td>
+      - unexpected value "Amazon Prime"
 
 ```
 
@@ -76,17 +76,17 @@ Call log:
           - img [ref=e43]
           - generic [ref=e45]:
             - paragraph [ref=e46]: Monthly Spend
-            - paragraph [ref=e47]: $93.91
+            - paragraph [ref=e47]: $100.91
         - generic [ref=e49]:
           - img [ref=e51]
           - generic [ref=e53]:
             - paragraph [ref=e54]: Annual Spend
-            - paragraph [ref=e55]: $1126.92
+            - paragraph [ref=e55]: $1210.92
         - generic [ref=e57]:
           - img [ref=e59]
           - generic [ref=e62]:
             - paragraph [ref=e63]: Avg Rating
-            - paragraph [ref=e64]: 4.1 / 5
+            - paragraph [ref=e64]: 4.3 / 5
         - generic [ref=e66]:
           - img [ref=e68]
           - generic [ref=e70]:
@@ -130,11 +130,11 @@ Call log:
                       - img [ref=e108]
                   - columnheader "Actions" [ref=e111]
               - rowgroup [ref=e112]:
-                - row "Spotify $9.99 Monthly 2026-06-05" [ref=e113] [cursor=pointer]:
-                  - cell "Spotify" [ref=e114]
-                  - cell "$9.99" [ref=e115]
+                - row "Amazon Prime $14.99 Monthly 2026-06-20" [ref=e113] [cursor=pointer]:
+                  - cell "Amazon Prime" [ref=e114]
+                  - cell "$14.99" [ref=e115]
                   - cell "Monthly" [ref=e116]
-                  - cell "2026-06-05" [ref=e117]
+                  - cell "2026-06-20" [ref=e117]
                   - cell [ref=e118]:
                     - generic [ref=e119]:
                       - img [ref=e120]
@@ -148,11 +148,11 @@ Call log:
                         - img
                       - button [ref=e133]:
                         - img
-                - row "Spotify $9.99 Monthly 2026-06-05" [ref=e134] [cursor=pointer]:
-                  - cell "Spotify" [ref=e135]
-                  - cell "$9.99" [ref=e136]
+                - row "iCloud+ $2.99 Monthly 2026-06-15" [ref=e134] [cursor=pointer]:
+                  - cell "iCloud+" [ref=e135]
+                  - cell "$2.99" [ref=e136]
                   - cell "Monthly" [ref=e137]
-                  - cell "2026-06-05" [ref=e138]
+                  - cell "2026-06-15" [ref=e138]
                   - cell [ref=e139]:
                     - generic [ref=e140]:
                       - img [ref=e141]
@@ -166,11 +166,11 @@ Call log:
                         - img
                       - button [ref=e154]:
                         - img
-                - row "Spotify $9.99 Monthly 2026-06-05" [ref=e155] [cursor=pointer]:
-                  - cell "Spotify" [ref=e156]
-                  - cell "$9.99" [ref=e157]
+                - row "iCloud+ $2.99 Monthly 2026-06-15" [ref=e155] [cursor=pointer]:
+                  - cell "iCloud+" [ref=e156]
+                  - cell "$2.99" [ref=e157]
                   - cell "Monthly" [ref=e158]
-                  - cell "2026-06-05" [ref=e159]
+                  - cell "2026-06-15" [ref=e159]
                   - cell [ref=e160]:
                     - generic [ref=e161]:
                       - img [ref=e162]
@@ -184,11 +184,11 @@ Call log:
                         - img
                       - button [ref=e175]:
                         - img
-                - row "Spotify $9.99 Monthly 2026-06-05" [ref=e176] [cursor=pointer]:
-                  - cell "Spotify" [ref=e177]
-                  - cell "$9.99" [ref=e178]
+                - row "Netflix $15.99 Monthly 2026-06-01" [ref=e176] [cursor=pointer]:
+                  - cell "Netflix" [ref=e177]
+                  - cell "$15.99" [ref=e178]
                   - cell "Monthly" [ref=e179]
-                  - cell "2026-06-05" [ref=e180]
+                  - cell "2026-06-01" [ref=e180]
                   - cell [ref=e181]:
                     - generic [ref=e182]:
                       - img [ref=e183]
@@ -202,11 +202,11 @@ Call log:
                         - img
                       - button [ref=e196]:
                         - img
-                - row "Spotify $9.99 Monthly 2026-06-05" [ref=e197] [cursor=pointer]:
-                  - cell "Spotify" [ref=e198]
-                  - cell "$9.99" [ref=e199]
+                - row "Netflix $15.99 Monthly 2026-06-01" [ref=e197] [cursor=pointer]:
+                  - cell "Netflix" [ref=e198]
+                  - cell "$15.99" [ref=e199]
                   - cell "Monthly" [ref=e200]
-                  - cell "2026-06-05" [ref=e201]
+                  - cell "2026-06-01" [ref=e201]
                   - cell [ref=e202]:
                     - generic [ref=e203]:
                       - img [ref=e204]
@@ -256,11 +256,11 @@ Call log:
                         - img
                       - button [ref=e259]:
                         - img
-                - row "Spotify $9.99 Monthly 2026-06-05" [ref=e260] [cursor=pointer]:
-                  - cell "Spotify" [ref=e261]
-                  - cell "$9.99" [ref=e262]
+                - row "YouTube Premium $13.99 Monthly 2026-06-10" [ref=e260] [cursor=pointer]:
+                  - cell "YouTube Premium" [ref=e261]
+                  - cell "$13.99" [ref=e262]
                   - cell "Monthly" [ref=e263]
-                  - cell "2026-06-05" [ref=e264]
+                  - cell "2026-06-10" [ref=e264]
                   - cell [ref=e265]:
                     - generic [ref=e266]:
                       - img [ref=e267]
@@ -303,176 +303,207 @@ Call log:
                   - generic [ref=e312]:
                     - img [ref=e314]
                     - img [ref=e316]
-                - list [ref=e318]:
-                  - listitem [ref=e319]:
-                    - img [ref=e320]
-                    - text: Music
-                  - listitem [ref=e322]:
-                    - img [ref=e323]
+                    - img [ref=e318]
+                - list [ref=e320]:
+                  - listitem [ref=e321]:
+                    - img [ref=e322]
                     - text: Entertainment
-            - generic [ref=e325]:
-              - generic [ref=e327]:
-                - heading "Weekly Payment Breakdown" [level=3] [ref=e328]
-                - paragraph [ref=e329]: "Total due this week: $17.81"
-              - img [ref=e332]:
-                - generic [ref=e334]:
-                  - generic [ref=e336]: Mon
-                  - generic [ref=e338]: Tue
-                  - generic [ref=e340]: Wed
-                  - generic [ref=e342]: Thu
-                  - generic [ref=e344]: Fri
-                  - generic [ref=e346]: Sat
-                  - generic [ref=e348]: Sun
-                - generic [ref=e350]:
-                  - generic [ref=e352]: "0"
-                  - generic [ref=e354]: "2"
-                  - generic [ref=e356]: "4"
-                  - generic [ref=e358]: "6"
-                  - generic [ref=e360]: "8"
-            - generic [ref=e378]:
-              - heading "Value for Money Rating" [level=3] [ref=e379]
-              - generic [ref=e380]:
-                - generic [ref=e381]:
-                  - generic [ref=e382]: Spotify · $9.99/mo
-                  - generic [ref=e383]:
-                    - generic [ref=e384]: ★
-                    - generic [ref=e385]: ★
-                    - generic [ref=e386]: ★
-                    - generic [ref=e387]: ★
-                    - generic [ref=e388]: ★
-                - generic [ref=e389]:
-                  - generic [ref=e390]: Spotify · $9.99/mo
-                  - generic [ref=e391]:
+                  - listitem [ref=e324]:
+                    - img [ref=e325]
+                    - text: Music
+                  - listitem [ref=e327]:
+                    - img [ref=e328]
+                    - text: Cloud Storage
+            - generic [ref=e330]:
+              - generic [ref=e332]:
+                - heading "Weekly Payment Breakdown" [level=3] [ref=e333]
+                - paragraph [ref=e334]: "Total due this week: $19.14"
+              - img [ref=e337]:
+                - generic [ref=e339]:
+                  - generic [ref=e341]: Mon
+                  - generic [ref=e343]: Tue
+                  - generic [ref=e345]: Wed
+                  - generic [ref=e347]: Thu
+                  - generic [ref=e349]: Fri
+                  - generic [ref=e351]: Sat
+                  - generic [ref=e353]: Sun
+                - generic [ref=e355]:
+                  - generic [ref=e357]: "0"
+                  - generic [ref=e359]: "2"
+                  - generic [ref=e361]: "4"
+                  - generic [ref=e363]: "6"
+                  - generic [ref=e365]: "8"
+            - generic [ref=e383]:
+              - heading "Value for Money Rating" [level=3] [ref=e384]
+              - generic [ref=e385]:
+                - generic [ref=e386]:
+                  - generic [ref=e387]: Netflix · $15.99/mo
+                  - generic [ref=e388]:
+                    - generic [ref=e389]: ★
+                    - generic [ref=e390]: ★
+                    - generic [ref=e391]: ★
                     - generic [ref=e392]: ★
                     - generic [ref=e393]: ★
-                    - generic [ref=e394]: ★
-                    - generic [ref=e395]: ★
-                    - generic [ref=e396]: ★
-                - generic [ref=e397]:
-                  - generic [ref=e398]: Spotify · $9.99/mo
-                  - generic [ref=e399]:
+                - generic [ref=e394]:
+                  - generic [ref=e395]: Netflix · $15.99/mo
+                  - generic [ref=e396]:
+                    - generic [ref=e397]: ★
+                    - generic [ref=e398]: ★
+                    - generic [ref=e399]: ★
                     - generic [ref=e400]: ★
                     - generic [ref=e401]: ★
-                    - generic [ref=e402]: ★
-                    - generic [ref=e403]: ★
-                    - generic [ref=e404]: ★
-                - generic [ref=e405]:
-                  - generic [ref=e406]: Spotify · $9.99/mo
-                  - generic [ref=e407]:
+                - generic [ref=e402]:
+                  - generic [ref=e403]: Spotify · $9.99/mo
+                  - generic [ref=e404]:
+                    - generic [ref=e405]: ★
+                    - generic [ref=e406]: ★
+                    - generic [ref=e407]: ★
                     - generic [ref=e408]: ★
                     - generic [ref=e409]: ★
-                    - generic [ref=e410]: ★
-                    - generic [ref=e411]: ★
-                    - generic [ref=e412]: ★
-          - generic [ref=e413]:
-            - generic [ref=e414]:
-              - img [ref=e416]
-              - generic [ref=e418]:
-                - heading "Security Alerts" [level=3] [ref=e419]
-                - paragraph [ref=e420]: Flagged User Activity Observation
-            - generic [ref=e422]:
+                - generic [ref=e410]:
+                  - generic [ref=e411]: Spotify · $9.99/mo
+                  - generic [ref=e412]:
+                    - generic [ref=e413]: ★
+                    - generic [ref=e414]: ★
+                    - generic [ref=e415]: ★
+                    - generic [ref=e416]: ★
+                    - generic [ref=e417]: ★
+          - generic [ref=e418]:
+            - generic [ref=e419]:
+              - img [ref=e421]
               - generic [ref=e423]:
-                - generic [ref=e424]:
-                  - img [ref=e426]
-                  - generic [ref=e431]:
-                    - paragraph [ref=e432]: admin_user
-                    - paragraph [ref=e433]: Bulk deletion suspected
-                - generic [ref=e434]:
-                  - img [ref=e435]
-                  - text: May 21, 2026, 5:23 PM
-              - generic [ref=e438]:
+                - heading "Security Alerts" [level=3] [ref=e424]
+                - paragraph [ref=e425]: Flagged User Activity Observation
+            - generic [ref=e427]:
+              - generic [ref=e428]:
+                - generic [ref=e429]:
+                  - img [ref=e431]
+                  - generic [ref=e436]:
+                    - paragraph [ref=e437]: admin_user
+                    - paragraph [ref=e438]: Bulk deletion suspected
                 - generic [ref=e439]:
-                  - img [ref=e441]
-                  - generic [ref=e446]:
-                    - paragraph [ref=e447]: admin_user
-                    - paragraph [ref=e448]: Bulk deletion suspected
-                - generic [ref=e449]:
-                  - img [ref=e450]
-                  - text: May 21, 2026, 5:22 PM
-              - generic [ref=e453]:
+                  - img [ref=e440]
+                  - text: May 21, 2026, 5:25 PM
+              - generic [ref=e443]:
+                - generic [ref=e444]:
+                  - img [ref=e446]
+                  - generic [ref=e451]:
+                    - paragraph [ref=e452]: admin_user
+                    - paragraph [ref=e453]: Bulk deletion suspected
                 - generic [ref=e454]:
-                  - img [ref=e456]
-                  - generic [ref=e461]:
-                    - paragraph [ref=e462]: admin_user
-                    - paragraph [ref=e463]: Bulk deletion suspected
-                - generic [ref=e464]:
-                  - img [ref=e465]
-                  - text: May 21, 2026, 5:21 PM
-              - generic [ref=e468]:
+                  - img [ref=e455]
+                  - text: May 21, 2026, 5:23 PM
+              - generic [ref=e458]:
+                - generic [ref=e459]:
+                  - img [ref=e461]
+                  - generic [ref=e466]:
+                    - paragraph [ref=e467]: admin_user
+                    - paragraph [ref=e468]: Bulk deletion suspected
                 - generic [ref=e469]:
-                  - img [ref=e471]
-                  - generic [ref=e476]:
-                    - paragraph [ref=e477]: admin_user
-                    - paragraph [ref=e478]: Bulk deletion suspected
-                - generic [ref=e479]:
-                  - img [ref=e480]
-                  - text: May 21, 2026, 5:21 PM
-              - generic [ref=e483]:
+                  - img [ref=e470]
+                  - text: May 21, 2026, 5:23 PM
+              - generic [ref=e473]:
+                - generic [ref=e474]:
+                  - img [ref=e476]
+                  - generic [ref=e481]:
+                    - paragraph [ref=e482]: admin_user
+                    - paragraph [ref=e483]: Bulk deletion suspected
                 - generic [ref=e484]:
-                  - img [ref=e486]
-                  - generic [ref=e491]:
-                    - paragraph [ref=e492]: admin_user
-                    - paragraph [ref=e493]: Bulk deletion suspected
-                - generic [ref=e494]:
-                  - img [ref=e495]
-                  - text: May 21, 2026, 5:10 PM
-              - generic [ref=e498]:
+                  - img [ref=e485]
+                  - text: May 21, 2026, 5:23 PM
+              - generic [ref=e488]:
+                - generic [ref=e489]:
+                  - img [ref=e491]
+                  - generic [ref=e496]:
+                    - paragraph [ref=e497]: admin_user
+                    - paragraph [ref=e498]: Bulk deletion suspected
                 - generic [ref=e499]:
-                  - img [ref=e501]
-                  - generic [ref=e506]:
-                    - paragraph [ref=e507]: admin_user
-                    - paragraph [ref=e508]: Bulk deletion suspected
-                - generic [ref=e509]:
-                  - img [ref=e510]
-                  - text: May 21, 2026, 5:05 PM
-              - generic [ref=e513]:
+                  - img [ref=e500]
+                  - text: May 21, 2026, 5:22 PM
+              - generic [ref=e503]:
+                - generic [ref=e504]:
+                  - img [ref=e506]
+                  - generic [ref=e511]:
+                    - paragraph [ref=e512]: admin_user
+                    - paragraph [ref=e513]: Bulk deletion suspected
                 - generic [ref=e514]:
-                  - img [ref=e516]
-                  - generic [ref=e521]:
-                    - paragraph [ref=e522]: normal_user
-                    - paragraph [ref=e523]: Bulk deletion suspected
-                - generic [ref=e524]:
-                  - img [ref=e525]
-                  - text: May 21, 2026, 4:25 PM
-              - generic [ref=e528]:
+                  - img [ref=e515]
+                  - text: May 21, 2026, 5:21 PM
+              - generic [ref=e518]:
+                - generic [ref=e519]:
+                  - img [ref=e521]
+                  - generic [ref=e526]:
+                    - paragraph [ref=e527]: admin_user
+                    - paragraph [ref=e528]: Bulk deletion suspected
                 - generic [ref=e529]:
-                  - img [ref=e531]
-                  - generic [ref=e536]:
-                    - paragraph [ref=e537]: admin_user
-                    - paragraph [ref=e538]: Bulk deletion suspected
-                - generic [ref=e539]:
-                  - img [ref=e540]
-                  - text: May 21, 2026, 4:20 PM
-              - generic [ref=e543]:
+                  - img [ref=e530]
+                  - text: May 21, 2026, 5:21 PM
+              - generic [ref=e533]:
+                - generic [ref=e534]:
+                  - img [ref=e536]
+                  - generic [ref=e541]:
+                    - paragraph [ref=e542]: admin_user
+                    - paragraph [ref=e543]: Bulk deletion suspected
                 - generic [ref=e544]:
-                  - img [ref=e546]
-                  - generic [ref=e551]:
-                    - paragraph [ref=e552]: normal_user
-                    - paragraph [ref=e553]: Bulk deletion suspected
-                - generic [ref=e554]:
-                  - img [ref=e555]
-                  - text: May 21, 2026, 2:19 PM
-              - generic [ref=e558]:
+                  - img [ref=e545]
+                  - text: May 21, 2026, 5:10 PM
+              - generic [ref=e548]:
+                - generic [ref=e549]:
+                  - img [ref=e551]
+                  - generic [ref=e556]:
+                    - paragraph [ref=e557]: admin_user
+                    - paragraph [ref=e558]: Bulk deletion suspected
                 - generic [ref=e559]:
-                  - img [ref=e561]
-                  - generic [ref=e566]:
-                    - paragraph [ref=e567]: admin_user
-                    - paragraph [ref=e568]: Bulk deletion suspected
-                - generic [ref=e569]:
-                  - img [ref=e570]
-                  - text: May 21, 2026, 2:02 PM
-              - generic [ref=e573]:
+                  - img [ref=e560]
+                  - text: May 21, 2026, 5:05 PM
+              - generic [ref=e563]:
+                - generic [ref=e564]:
+                  - img [ref=e566]
+                  - generic [ref=e571]:
+                    - paragraph [ref=e572]: normal_user
+                    - paragraph [ref=e573]: Bulk deletion suspected
                 - generic [ref=e574]:
-                  - img [ref=e576]
-                  - generic [ref=e581]:
-                    - paragraph [ref=e582]: normal_user
-                    - paragraph [ref=e583]: Bulk deletion suspected
-                - generic [ref=e584]:
-                  - img [ref=e585]
+                  - img [ref=e575]
+                  - text: May 21, 2026, 4:25 PM
+              - generic [ref=e578]:
+                - generic [ref=e579]:
+                  - img [ref=e581]
+                  - generic [ref=e586]:
+                    - paragraph [ref=e587]: admin_user
+                    - paragraph [ref=e588]: Bulk deletion suspected
+                - generic [ref=e589]:
+                  - img [ref=e590]
+                  - text: May 21, 2026, 4:20 PM
+              - generic [ref=e593]:
+                - generic [ref=e594]:
+                  - img [ref=e596]
+                  - generic [ref=e601]:
+                    - paragraph [ref=e602]: normal_user
+                    - paragraph [ref=e603]: Bulk deletion suspected
+                - generic [ref=e604]:
+                  - img [ref=e605]
+                  - text: May 21, 2026, 2:19 PM
+              - generic [ref=e608]:
+                - generic [ref=e609]:
+                  - img [ref=e611]
+                  - generic [ref=e616]:
+                    - paragraph [ref=e617]: admin_user
+                    - paragraph [ref=e618]: Bulk deletion suspected
+                - generic [ref=e619]:
+                  - img [ref=e620]
+                  - text: May 21, 2026, 2:02 PM
+              - generic [ref=e623]:
+                - generic [ref=e624]:
+                  - img [ref=e626]
+                  - generic [ref=e631]:
+                    - paragraph [ref=e632]: normal_user
+                    - paragraph [ref=e633]: Bulk deletion suspected
+                - generic [ref=e634]:
+                  - img [ref=e635]
                   - text: May 21, 2026, 12:32 AM
-      - button [ref=e589] [cursor=pointer]:
+      - button [ref=e639] [cursor=pointer]:
         - img
-  - generic [ref=e590]: "6"
+  - generic [ref=e640]: "6"
 ```
 
 # Test source
