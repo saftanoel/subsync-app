@@ -3,14 +3,20 @@ import { test, expect } from "@playwright/test";
 test.describe("SubSync SDI Assignment - Silver & Gold", () => {
 
   test.beforeEach(async ({ page }) => {
+    page.on('response', response => {
+      if (response.url().includes('login') && response.request().method() === 'POST') {
+        console.log(`[LOGIN RESPONSE] status: ${response.status()}`);
+      }
+    });
+
     await page.addInitScript(() => {
       window.sessionStorage.setItem('skipLoader', 'true');
     });
 
     await page.goto("/login");
     
-    await page.fill('input[id="email"]', "demo@subsync.com");
-    await page.fill('input[id="password"]', "password123");
+    await page.fill('input[id="username"]', "admin_user");
+    await page.fill('input[id="password"]', "admin123");
     await page.click('button[type="submit"]', { force: true });
     
     await expect(page).toHaveURL(/\/dashboard/);

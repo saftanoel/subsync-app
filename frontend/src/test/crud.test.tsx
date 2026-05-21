@@ -2,7 +2,8 @@ import { describe, it, expect, vi } from "vitest";
 import { render, fireEvent } from "@testing-library/react";
 import { screen } from "@testing-library/dom";
 import { BrowserRouter } from "react-router-dom";
-import { SubscriptionProvider, useSubscriptions } from "@/contexts/SubscriptionContext";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
+import { useSubscriptions } from "@/hooks/useSubscriptions";
 
 function Wrapper({ children }: { children: React.ReactNode }) {
   return (

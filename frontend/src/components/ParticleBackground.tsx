@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react';
+import { useTheme } from 'next-themes';
 
 export function ParticleBackground() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const { resolvedTheme } = useTheme();
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -29,6 +31,19 @@ export function ParticleBackground() {
             mouse.y = -1000;
         });
 
+        const isDark = resolvedTheme === 'dark';
+        const colors = isDark ? [
+            'rgba(0, 255, 128, 0.4)',
+            'rgba(0, 255, 128, 0.15)',
+            'rgba(255, 255, 255, 0.3)',
+            'rgba(148, 163, 184, 0.2)'
+        ] : [
+            'rgba(16, 185, 129, 0.6)',  // Emerald green (matches Tailwind primary)
+            'rgba(16, 185, 129, 0.3)',
+            'rgba(0, 0, 0, 0.15)',      // faint dark gray instead of white
+            'rgba(71, 85, 105, 0.2)'    // Slate-600
+        ];
+
         class Particle {
             x: number;
             y: number;
@@ -55,12 +70,6 @@ export function ParticleBackground() {
                 this.size = Math.random() * 2 + 1;
                 this.density = Math.random() * 20 + 5;
 
-                const colors = [
-                    'rgba(0, 255, 128, 0.4)',
-                    'rgba(0, 255, 128, 0.15)',
-                    'rgba(255, 255, 255, 0.3)',
-                    'rgba(148, 163, 184, 0.2)'
-                ];
                 this.color = colors[Math.floor(Math.random() * colors.length)];
             }
 
@@ -135,7 +144,7 @@ export function ParticleBackground() {
             window.removeEventListener('mousemove', handleMouseMove);
             cancelAnimationFrame(animationFrameId);
         };
-    }, []);
+    }, [resolvedTheme]);
 
     return (
         <canvas
