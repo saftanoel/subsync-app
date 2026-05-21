@@ -229,7 +229,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const updateSubscription = useCallback(async (id: string, updates: Partial<Omit<Subscription, "id">>) => {
     try {
       if (isOnline) {
-        const { payments, ...updateBody } = updates as any;
+        const { payments: _payments, ...updateBody } = updates;
         const res = await fetch(`${API_BASE}/subscriptions/${id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -250,15 +250,20 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }, [isOnline]);
 
   const deleteSubscription = useCallback(async (id: string) => {
+    console.log(`[DEBUG] deleteSubscription called for ID: ${id}`);
     const savedUser = localStorage.getItem("subsync_user");
     const user = savedUser ? JSON.parse(savedUser) : null;
     const username = user?.username || "unknown";
+    console.log(`[DEBUG] deleteSubscription - username: ${username}, isOnline: ${isOnline}`);
 
     try {
       if (isOnline) {
-        const res = await fetch(`${API_BASE}/subscriptions/${id}?username=${username}`, {
+        const url = `${API_BASE}/subscriptions/${id}?username=${username}`;
+        console.log(`[DEBUG] deleteSubscription - fetching: ${url}`);
+        const res = await fetch(url, {
           method: "DELETE"
         });
+        console.log(`[DEBUG] deleteSubscription - response status: ${res.status}`);
         if (res.ok || res.status === 204) {
           // Remove from state AND purge from localStorage so it can't be
           // resurrected on the next syncWithServer merge pass.
@@ -268,6 +273,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
             return updated;
           });
           return;
+        } else {
+          const text = await res.text();
+          console.log(`[DEBUG] deleteSubscription - response error body: ${text}`);
         }
       }
       // Offline path — remove from state only (will sync later)
