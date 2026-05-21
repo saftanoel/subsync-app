@@ -22,7 +22,8 @@ export function AdminObservationList() {
         const res = await fetch(`${API_BASE}/admin/flagged-users`, {
           headers: {
             "ngrok-skip-browser-warning": "69420"
-          }
+          },
+          cache: "no-store"
         });
         
         if (res.ok) {
