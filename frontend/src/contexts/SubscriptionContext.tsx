@@ -226,9 +226,27 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
   }, [isOnline]);
 
-  const updateSubscription = useCallback((id: string, updates: Partial<Omit<Subscription, "id">>) => {
-    setSubscriptions(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
-    if (!isOnline) toast.info("Modificările au fost salvate local. Se vor sincroniza automat.");
+  const updateSubscription = useCallback(async (id: string, updates: Partial<Omit<Subscription, "id">>) => {
+    try {
+      if (isOnline) {
+        const { payments, ...updateBody } = updates as any;
+        const res = await fetch(`${API_BASE}/subscriptions/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updateBody)
+        });
+        if (res.ok) {
+          const updatedSub = await res.json();
+          setSubscriptions(prev => prev.map(s => s.id === id ? updatedSub : s));
+          return;
+        }
+      }
+      setSubscriptions(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+      if (!isOnline) toast.info("Modificările au fost salvate local. Se vor sincroniza automat.");
+    } catch (error) {
+      console.error("Failed to update subscription:", error);
+      setSubscriptions(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+    }
   }, [isOnline]);
 
   const deleteSubscription = useCallback(async (id: string) => {
