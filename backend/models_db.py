@@ -1,3 +1,4 @@
+# data validation (database constraints)
 from sqlalchemy import Column, String, Float, Integer, ForeignKey, Table
 from sqlalchemy.orm import relationship
 from database import Base
