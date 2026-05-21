@@ -1,9 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
-import { useSubscriptions } from "@/contexts/SubscriptionContext";
+import { useSubscriptions } from "@/hooks/useSubscriptions";
 import { SubscriptionTable } from "@/components/SubscriptionTable";
 import { StatsCharts } from "@/components/StatsCharts";
 import { SubscriptionForm } from "@/components/SubscriptionForm";
 import { SubscriptionDetail } from "@/components/SubscriptionDetail";
+import { DataGenerator } from "@/components/DataGenerator";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, DollarSign, CreditCard, TrendingUp, WifiOff } from "lucide-react";
@@ -52,6 +53,10 @@ export default function DashboardPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <div className="mb-6">
+        <DataGenerator />
+      </div>
 
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s, i) => (

@@ -1,20 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import Cookies from "js-cookie";
-
-interface User {
-  email: string;
-  name: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => boolean;
-  register: (name: string, email: string, password: string) => boolean;
-  logout: () => void;
-  isAuthenticated: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | null>(null);
+import { AuthContext, User } from "./authContextDef";
 
 // In-memory user store
 const userStore: { email: string; name: string; password: string }[] = [
@@ -61,9 +47,3 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     </AuthContext.Provider>
   );
 }
-
-export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
-};

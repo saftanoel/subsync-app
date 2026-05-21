@@ -1,23 +1,8 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Cookies from "js-cookie";
 import type { Subscription } from "@/types/subscription";
-import { toast } from "sonner"; 
-
-interface SubscriptionContextType {
-  subscriptions: Subscription[];
-  isOnline: boolean;
-  addSubscription: (sub: Omit<Subscription, "id">) => void;
-  updateSubscription: (id: string, sub: Partial<Omit<Subscription, "id">>) => void;
-  deleteSubscription: (id: string) => void;
-  getSubscription: (id: string) => Subscription | undefined;
-  sortColumn: string;
-  setSortColumn: (col: string) => void;
-  hasMore: boolean;
-  loadMore: () => void;
-  isLoading: boolean;
-}
-
-const SubscriptionContext = createContext<SubscriptionContextType | null>(null);
+import { toast } from "sonner";
+import { SubscriptionContext } from "./subscriptionContextDef";
 
 const LIMIT = 10; 
 
@@ -246,9 +231,3 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     </SubscriptionContext.Provider>
   );
 }
-
-export const useSubscriptions = () => {
-  const ctx = useContext(SubscriptionContext);
-  if (!ctx) throw new Error("useSubscriptions must be used within SubscriptionProvider");
-  return ctx;
-};
