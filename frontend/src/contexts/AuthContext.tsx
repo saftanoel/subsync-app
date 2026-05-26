@@ -37,6 +37,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("unauthorized", handleUnauthorized);
   }, [logout]);
 
+  // ── Auto-logout Inactivity Timer ─────────────────────────────────────────────
+  useEffect(() => {
+    if (!token) return; // Only track inactivity if the user is logged in
+
+    let timeoutId: NodeJS.Timeout;
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      // 15 minutes = 15 * 60 * 1000 = 900,000 ms
+      timeoutId = setTimeout(() => {
+        logout();
+      }, 15 * 60 * 1000);
+    };
+
+    // Throttle the event listener execution to max once per second
+    let lastActivity = Date.now();
+    const handleActivity = () => {
+      const now = Date.now();
+      if (now - lastActivity > 1000) {
+        lastActivity = now;
+        resetTimer();
+      }
+    };
+
+    // Initialize timer
+    resetTimer();
+
+    // Attach listeners
+    const events = ["mousemove", "keydown", "click", "scroll"];
+    events.forEach((event) => window.addEventListener(event, handleActivity));
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach((event) => window.removeEventListener(event, handleActivity));
+    };
+  }, [token, logout]);
+
   // ── Login ───────────────────────────────────────────────────────────────────
   const login = useCallback(async (username: string, password: string): Promise<boolean> => {
     try {
