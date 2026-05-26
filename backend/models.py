@@ -1,20 +1,22 @@
 # server side data validation
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 
 class Payment(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: str
     amount: float
     date: str
     subscription_id: str  # Legătura către abonament
 
 class SubscriptionBase(BaseModel):
-    serviceName: str = Field(..., min_length=1)
-    category: str = Field(..., min_length=1)
-    monthlyCost: float = Field(..., ge=0)
-    billingCycle: str = Field(..., pattern="^(Monthly|Annual)$")
+    model_config = ConfigDict(from_attributes=True)
+    serviceName: str = Field(min_length=1)
+    category: str = Field(min_length=1)
+    monthlyCost: float = Field(ge=0)
+    billingCycle: str = Field(pattern="^(Monthly|Annual)$")
     nextPayment: str
-    valueRating: int = Field(..., ge=1, le=5)
+    valueRating: int = Field(ge=1, le=5)
 
 class SubscriptionCreate(SubscriptionBase):
     pass

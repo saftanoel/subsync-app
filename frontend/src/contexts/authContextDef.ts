@@ -13,10 +13,11 @@ export interface User {
 
 export interface AuthContextType {
   user:            User | null;
+  token:           string | null;
   isAuthenticated: boolean;
   login:           (username: string, password: string) => Promise<boolean>;
   logout:          () => void;
-  register:        (name: string, email: string, password: string) => boolean;
+  register:        (name: string, email: string, password: string) => Promise<boolean>;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);

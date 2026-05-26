@@ -3,6 +3,7 @@ import Cookies from "js-cookie";
 import type { Subscription } from "@/types/subscription";
 import { toast } from "sonner";
 import { API_BASE, WS_BASE } from "@/config/api";
+import { fetchWithAuth } from "@/lib/api";
 import { SubscriptionContext } from "@/contexts/subscriptionContextDef";
 import type { SubscriptionContextType } from "@/contexts/subscriptionContextDef";
 
@@ -50,7 +51,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       }
     `;
 
-    const res = await fetch(`${API_BASE}/graphql`, {
+    const res = await fetchWithAuth(`${API_BASE}/graphql`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query })
@@ -206,7 +207,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const addSubscription = useCallback(async (sub: Omit<Subscription, "id">) => {
     try {
       if (isOnline) {
-        const res = await fetch(`${API_BASE}/subscriptions`, {
+        const res = await fetchWithAuth(`${API_BASE}/subscriptions`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(sub)
@@ -230,7 +231,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     try {
       if (isOnline) {
         const { payments: _payments, ...updateBody } = updates;
-        const res = await fetch(`${API_BASE}/subscriptions/${id}`, {
+        const res = await fetchWithAuth(`${API_BASE}/subscriptions/${id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updateBody)
@@ -258,9 +259,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
     try {
       if (isOnline) {
-        const url = `${API_BASE}/subscriptions/${id}?username=${username}`;
+        const url = `${API_BASE}/subscriptions/${id}`;
         console.log(`[DEBUG] deleteSubscription - fetching: ${url}`);
-        const res = await fetch(url, {
+        const res = await fetchWithAuth(url, {
           method: "DELETE"
         });
         console.log(`[DEBUG] deleteSubscription - response status: ${res.status}`);
