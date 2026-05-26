@@ -16,15 +16,19 @@ export default function RegisterPage() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     if (!name || !email || !password || !confirm) { setError("All fields are required."); return; }
     if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
     if (password !== confirm) { setError("Passwords do not match."); return; }
-    const ok = register(name, email, password);
-    if (ok) navigate("/dashboard");
-    else setError("An account with this email already exists.");
+    
+    const ok = await register(name, email, password);
+    if (ok) {
+      navigate("/dashboard");
+    } else {
+      setError("Registration failed. Email or username might already exist.");
+    }
   };
 
   return (

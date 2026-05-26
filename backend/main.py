@@ -1,8 +1,8 @@
 # server side data validation
-from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from uuid import uuid4
 import asyncio
 
@@ -20,12 +20,15 @@ from mongo_db import (
     get_all_flagged_users,
 )
 from security_analysis import check_malicious_behavior
+from auth import router as auth_router, get_current_user
 
 app = FastAPI(
     title="SubSync API",
     description="Backend refactorizat pentru Gold Challenge",
     version="3.0.0",
 )
+
+app.include_router(auth_router, prefix="/auth")
 
 # Middleware pentru CORS
 app.add_middleware(
@@ -49,7 +52,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 @app.post("/start-generator")
-async def start_generator():
+async def start_generator(current_user: UserDB = Depends(get_current_user)):
     if services.is_generating:
         return {"message": "Generator is already running"}
     services.is_generating = True
@@ -58,33 +61,14 @@ async def start_generator():
 
 
 @app.post("/stop-generator")
-async def stop_generator():
+async def stop_generator(current_user: UserDB = Depends(get_current_user)):
     if not services.is_generating:
         return {"message": "Generator is not running"}
     services.is_generating = False
     return "Generator stopped successfully"
 
 
-# ── Auth endpoints ──────────────────────────────────────────────────────────────
-class LoginRequest(BaseModel):
-    username: str
-    password: str
 
-
-@app.post("/login")
-def login(payload: LoginRequest):
-    """Plain-text login for Silver Challenge (no tokens yet).
-    Returns user id, username, and role name on success.
-    """
-    with SessionLocal() as db:
-        user = db.query(UserDB).filter(UserDB.username == payload.username).first()
-        if not user or user.password != payload.password:
-            raise HTTPException(status_code=401, detail="Invalid username or password")
-        return {
-            "id": user.id,
-            "username": user.username,
-            "role": user.role.name if user.role else None,
-        }
 
 
 # --- CHAT WEBSOCKET MANAGER ---
@@ -134,82 +118,37 @@ async def chat_endpoint(websocket: WebSocket, username: str):
 # rest api endpoints (păstrate pentru compatibilitatea cu testele unitare)
 @app.get("/subscriptions", response_model=List[Subscription])
 def get_all_subscriptions(
-    skip: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=100)
+    skip: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=100),
+    current_user: UserDB = Depends(get_current_user)
 ):
     with SessionLocal() as db:
-        subs = db.query(SubscriptionDB).offset(skip).limit(limit).all()
-        return [
-            Subscription(
-                id=sub.id,
-                serviceName=sub.serviceName,
-                category=sub.category,
-                monthlyCost=sub.monthlyCost,
-                billingCycle=sub.billingCycle,
-                nextPayment=sub.nextPayment,
-                valueRating=sub.valueRating,
-                payments=[
-                    Payment(
-                        id=p.id,
-                        amount=p.amount,
-                        date=p.date,
-                        subscription_id=p.subscription_id,
-                    )
-                    for p in sub.payments
-                ],
-            )
-            for sub in subs
-        ]
+        subs: List[SubscriptionDB] = db.query(SubscriptionDB).filter(SubscriptionDB.user_id == current_user.id).offset(skip).limit(limit).all()
+        return [Subscription.model_validate(sub) for sub in subs]
 
 
 @app.get("/subscriptions/{sub_id}", response_model=Subscription)
-def get_subscription(sub_id: str):
+def get_subscription(sub_id: str, current_user: UserDB = Depends(get_current_user)):
     with SessionLocal() as db:
-        sub = db.query(SubscriptionDB).filter(SubscriptionDB.id == sub_id).first()
+        sub: Optional[SubscriptionDB] = db.query(SubscriptionDB).filter(SubscriptionDB.id == sub_id, SubscriptionDB.user_id == current_user.id).first()
         if not sub:
             raise HTTPException(status_code=404, detail="Subscription not found")
-        return Subscription(
-            id=sub.id,
-            serviceName=sub.serviceName,
-            category=sub.category,
-            monthlyCost=sub.monthlyCost,
-            billingCycle=sub.billingCycle,
-            nextPayment=sub.nextPayment,
-            valueRating=sub.valueRating,
-            payments=[
-                Payment(
-                    id=p.id,
-                    amount=p.amount,
-                    date=p.date,
-                    subscription_id=p.subscription_id,
-                )
-                for p in sub.payments
-            ],
-        )
+        return Subscription.model_validate(sub)
 
 
 @app.post("/subscriptions", response_model=Subscription, status_code=201)
-def create_subscription(sub_in: SubscriptionCreate):
+def create_subscription(sub_in: SubscriptionCreate, current_user: UserDB = Depends(get_current_user)):
     with SessionLocal() as db:
-        new_sub = SubscriptionDB(id=str(uuid4()), **sub_in.model_dump())
+        new_sub = SubscriptionDB(id=str(uuid4()), user_id=current_user.id, **sub_in.model_dump())
         db.add(new_sub)
         db.commit()
         db.refresh(new_sub)
-        return Subscription(
-            id=new_sub.id,
-            serviceName=new_sub.serviceName,
-            category=new_sub.category,
-            monthlyCost=new_sub.monthlyCost,
-            billingCycle=new_sub.billingCycle,
-            nextPayment=new_sub.nextPayment,
-            valueRating=new_sub.valueRating,
-            payments=[],
-        )
+        return Subscription.model_validate(new_sub)
 
 
 @app.put("/subscriptions/{sub_id}", response_model=Subscription)
-def update_subscription(sub_id: str, sub_in: SubscriptionUpdate):
+def update_subscription(sub_id: str, sub_in: SubscriptionUpdate, current_user: UserDB = Depends(get_current_user)):
     with SessionLocal() as db:
-        sub = db.query(SubscriptionDB).filter(SubscriptionDB.id == sub_id).first()
+        sub: Optional[SubscriptionDB] = db.query(SubscriptionDB).filter(SubscriptionDB.id == sub_id, SubscriptionDB.user_id == current_user.id).first()
         if not sub:
             raise HTTPException(status_code=404, detail="Subscription not found")
 
@@ -219,50 +158,33 @@ def update_subscription(sub_id: str, sub_in: SubscriptionUpdate):
 
         db.commit()
         db.refresh(sub)
-        return Subscription(
-            id=sub.id,
-            serviceName=sub.serviceName,
-            category=sub.category,
-            monthlyCost=sub.monthlyCost,
-            billingCycle=sub.billingCycle,
-            nextPayment=sub.nextPayment,
-            valueRating=sub.valueRating,
-            payments=[
-                Payment(
-                    id=p.id,
-                    amount=p.amount,
-                    date=p.date,
-                    subscription_id=p.subscription_id,
-                )
-                for p in sub.payments
-            ],
-        )
+        return Subscription.model_validate(sub)
 
 
 @app.delete("/subscriptions/{sub_id}", status_code=204)
-async def delete_subscription(sub_id: str, username: str = Query("unknown")):
+async def delete_subscription(sub_id: str, current_user: UserDB = Depends(get_current_user)):
     # 1. Ștergem abonamentul din SQLite
     with SessionLocal() as db:
-        sub = db.query(SubscriptionDB).filter(SubscriptionDB.id == sub_id).first()
+        sub = db.query(SubscriptionDB).filter(SubscriptionDB.id == sub_id, SubscriptionDB.user_id == current_user.id).first()
         if not sub:
             raise HTTPException(status_code=404, detail="Subscription not found")
 
         db.delete(sub)
         db.commit()  # Asigurăm persistența ștergerii în baza de date
 
-    # 2. Gold Challenge: Audit Logging and Anomaly Detection (Protejat)
+    #  Audit Logging and Anomaly Detection (Protejat)
     try:
         await insert_audit_log(
-            username, "DELETE_SUBSCRIPTION", f"Deleted subscription {sub_id}"
+            str(current_user.username), "DELETE_SUBSCRIPTION", f"Deleted subscription {sub_id}"
         )
-        await check_malicious_behavior(username)
+        await check_malicious_behavior(str(current_user.username))
     except Exception as e:
         # Dacă MongoDB pică, măcar ștergerea abonamentului s-a salvat!
         print(f"Error during MongoDB audit logging: {e}")
 
 
 @app.get("/admin/flagged-users")
-async def get_flagged_users():
+async def get_flagged_users(current_user: UserDB = Depends(get_current_user)):
     """Retrieve all flagged users from MongoDB (Gold Challenge)."""
     return await get_all_flagged_users()
 
