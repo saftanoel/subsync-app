@@ -9,7 +9,7 @@ import typing
 
 from database import SessionLocal
 from models_db import UserDB, RoleDB
-from schemas import UserCreate, UserResponse, Token
+from schemas import UserCreate, UserResponse, Token, ForgotPasswordRequest, ResetPasswordRequest
 
 SECRET_KEY = "your-secret-key-for-jwt-replace-in-production"
 ALGORITHM = "HS256"
@@ -60,6 +60,14 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise credentials_exception
     return user
 
+def get_admin_user(current_user: UserDB = Depends(get_current_user)):
+    if not current_user.role or current_user.role.name != "ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have enough permissions to access this resource"
+        )
+    return current_user
+
 @router.post("/register", response_model=UserResponse)
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
     # Check if user exists by username or email
@@ -109,7 +117,40 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         )
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    role_name = str(user.role.name) if user.role else "USER"
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": str(user.username), "role": role_name}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/forgot-password")
+def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(UserDB).filter(UserDB.email == req.email).first()
+    if user:
+        reset_token = create_access_token(
+            data={"sub": str(user.username), "type": "password_reset"}, 
+            expires_delta=timedelta(minutes=15)
+        )
+        print(f"MOCK EMAIL: To reset your password, use this token: {reset_token}")
+        
+    return {"message": "If an account with that email exists, a password reset link has been sent."}
+
+@router.post("/reset-password")
+def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
+    try:
+        payload = jwt.decode(req.token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+        token_type = payload.get("type")
+        if not username or not isinstance(username, str) or token_type != "password_reset":
+            raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+        
+    user = db.query(UserDB).filter(UserDB.username == username).first()
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+        
+    user.hashed_password = get_password_hash(req.new_password)
+    db.commit()
+    
+    return {"message": "Password has been successfully reset"}

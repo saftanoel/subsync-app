@@ -20,7 +20,7 @@ from mongo_db import (
     get_all_flagged_users,
 )
 from security_analysis import check_malicious_behavior
-from auth import router as auth_router, get_current_user
+from auth import router as auth_router, get_current_user, get_admin_user
 
 app = FastAPI(
     title="SubSync API",
@@ -52,7 +52,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 @app.post("/start-generator")
-async def start_generator(current_user: UserDB = Depends(get_current_user)):
+async def start_generator(current_user: UserDB = Depends(get_admin_user)):
     if services.is_generating:
         return {"message": "Generator is already running"}
     services.is_generating = True
@@ -61,7 +61,7 @@ async def start_generator(current_user: UserDB = Depends(get_current_user)):
 
 
 @app.post("/stop-generator")
-async def stop_generator(current_user: UserDB = Depends(get_current_user)):
+async def stop_generator(current_user: UserDB = Depends(get_admin_user)):
     if not services.is_generating:
         return {"message": "Generator is not running"}
     services.is_generating = False
@@ -184,7 +184,7 @@ async def delete_subscription(sub_id: str, current_user: UserDB = Depends(get_cu
 
 
 @app.get("/admin/flagged-users")
-async def get_flagged_users(current_user: UserDB = Depends(get_current_user)):
+async def get_flagged_users(current_user: UserDB = Depends(get_admin_user)):
     """Retrieve all flagged users from MongoDB (Gold Challenge)."""
     return await get_all_flagged_users()
 
