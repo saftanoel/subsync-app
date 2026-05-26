@@ -8,5 +8,5 @@
  * For Vercel / ngrok deployment, update the two constants below.
  */
 
-export const API_BASE = "https://baggy-renderer-canned.ngrok-free.dev";
-export const WS_BASE  = "wss://baggy-renderer-canned.ngrok-free.dev";
+export const API_BASE = "https://192.168.1.151:8000";
+export const WS_BASE  = "wss://192.168.1.151:8000";
