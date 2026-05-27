@@ -1,9 +1,9 @@
-// Verificăm dacă aplicația a fost deschisă de pe Vercel
-const isProduction = window.location.hostname.includes("vercel.app");
+// Verificăm dacă aplicația a fost construită pentru producție
+const isProduction = import.meta.env.PROD;
 
 // 1. Link-urile pentru CLOUD (Pentru biletul de intrare la examen)
-const CLOUD_API = "https://subsync-api.onrender.com";
-const CLOUD_WS = "wss://subsync-api.onrender.com";
+const CLOUD_API = "https://subsync-app.onrender.com";
+const CLOUD_WS = "wss://subsync-app.onrender.com";
 
 // 2. Link-urile pentru LOCAL / LAN (Pentru Laborator / Hacking)
 
