@@ -1,7 +1,7 @@
 # server side data validation
 from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect, Depends, WebSocketException, status
 from fastapi.middleware.cors import CORSMiddleware
-from jose import JWTError, jwt
+import jwt
 from auth import SECRET_KEY, ALGORITHM
 from pydantic import BaseModel
 from typing import List, Optional
@@ -100,7 +100,7 @@ async def chat_endpoint(websocket: WebSocket, token: str = Query(...)):
         username: str = payload.get("sub")
         if username is None:
             raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
-    except JWTError:
+    except jwt.InvalidTokenError:
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
 
     await chat_manager.connect(websocket)
