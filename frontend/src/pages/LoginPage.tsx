@@ -92,14 +92,6 @@ export default function LoginPage() {
             )}
           </Button>
         </form>
-
-        {/* Hint for the demo credentials */}
-        <div className="mt-4 rounded-lg bg-secondary/40 px-4 py-3 text-xs text-muted-foreground space-y-1">
-          <p className="font-semibold text-foreground">Demo credentials</p>
-          <p>Admin: <span className="text-primary font-mono">admin_user / admin123</span></p>
-          <p>User: &nbsp;<span className="text-primary font-mono">normal_user / user123</span></p>
-        </div>
-
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Don't have an account?{" "}
           <Link to="/register" className="text-primary hover:underline">Register</Link>
