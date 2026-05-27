@@ -1,6 +1,8 @@
 # server side data validation
-from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect, Depends
+from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect, Depends, WebSocketException, status
 from fastapi.middleware.cors import CORSMiddleware
+from jose import JWTError, jwt
+from auth import SECRET_KEY, ALGORITHM
 from pydantic import BaseModel
 from typing import List, Optional
 from uuid import uuid4
@@ -91,8 +93,16 @@ class ChatConnectionManager:
 chat_manager = ChatConnectionManager()
 
 
-@app.websocket("/ws/chat/{username}")
-async def chat_endpoint(websocket: WebSocket, username: str):
+@app.websocket("/ws/chat")
+async def chat_endpoint(websocket: WebSocket, token: str = Query(...)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+    except JWTError:
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+
     await chat_manager.connect(websocket)
     try:
         # 1. Când se conectează un user, îi trimitem istoricul din MongoDB
@@ -122,14 +132,20 @@ def get_all_subscriptions(
     current_user: UserDB = Depends(get_current_user)
 ):
     with SessionLocal() as db:
-        subs: List[SubscriptionDB] = db.query(SubscriptionDB).filter(SubscriptionDB.user_id == current_user.id).offset(skip).limit(limit).all()
+        if current_user.role and current_user.role.name == "ADMIN":
+            subs: List[SubscriptionDB] = db.query(SubscriptionDB).offset(skip).limit(limit).all()
+        else:
+            subs: List[SubscriptionDB] = db.query(SubscriptionDB).filter(SubscriptionDB.user_id == current_user.id).offset(skip).limit(limit).all()
         return [Subscription.model_validate(sub) for sub in subs]
 
 
 @app.get("/subscriptions/{sub_id}", response_model=Subscription)
 def get_subscription(sub_id: str, current_user: UserDB = Depends(get_current_user)):
     with SessionLocal() as db:
-        sub: Optional[SubscriptionDB] = db.query(SubscriptionDB).filter(SubscriptionDB.id == sub_id, SubscriptionDB.user_id == current_user.id).first()
+        if current_user.role and current_user.role.name == "ADMIN":
+            sub: Optional[SubscriptionDB] = db.query(SubscriptionDB).filter(SubscriptionDB.id == sub_id).first()
+        else:
+            sub: Optional[SubscriptionDB] = db.query(SubscriptionDB).filter(SubscriptionDB.id == sub_id, SubscriptionDB.user_id == current_user.id).first()
         if not sub:
             raise HTTPException(status_code=404, detail="Subscription not found")
         return Subscription.model_validate(sub)
@@ -148,7 +164,10 @@ def create_subscription(sub_in: SubscriptionCreate, current_user: UserDB = Depen
 @app.put("/subscriptions/{sub_id}", response_model=Subscription)
 def update_subscription(sub_id: str, sub_in: SubscriptionUpdate, current_user: UserDB = Depends(get_current_user)):
     with SessionLocal() as db:
-        sub: Optional[SubscriptionDB] = db.query(SubscriptionDB).filter(SubscriptionDB.id == sub_id, SubscriptionDB.user_id == current_user.id).first()
+        if current_user.role and current_user.role.name == "ADMIN":
+            sub: Optional[SubscriptionDB] = db.query(SubscriptionDB).filter(SubscriptionDB.id == sub_id).first()
+        else:
+            sub: Optional[SubscriptionDB] = db.query(SubscriptionDB).filter(SubscriptionDB.id == sub_id, SubscriptionDB.user_id == current_user.id).first()
         if not sub:
             raise HTTPException(status_code=404, detail="Subscription not found")
 
@@ -165,7 +184,10 @@ def update_subscription(sub_id: str, sub_in: SubscriptionUpdate, current_user: U
 async def delete_subscription(sub_id: str, current_user: UserDB = Depends(get_current_user)):
     # 1. Ștergem abonamentul din SQLite
     with SessionLocal() as db:
-        sub = db.query(SubscriptionDB).filter(SubscriptionDB.id == sub_id, SubscriptionDB.user_id == current_user.id).first()
+        if current_user.role and current_user.role.name == "ADMIN":
+            sub = db.query(SubscriptionDB).filter(SubscriptionDB.id == sub_id).first()
+        else:
+            sub = db.query(SubscriptionDB).filter(SubscriptionDB.id == sub_id, SubscriptionDB.user_id == current_user.id).first()
         if not sub:
             raise HTTPException(status_code=404, detail="Subscription not found")
 

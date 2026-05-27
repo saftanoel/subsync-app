@@ -98,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userData: User = { 
         id: "mock-id-from-jwt", 
         username: decoded.sub, 
-        role: "USER" 
+        role: decoded.role || "USER" 
       };
 
       setUser(userData);

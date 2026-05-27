@@ -15,7 +15,7 @@ interface ChatMessage {
 }
 
 export function ChatComponent() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
   const [isConnected, setIsConnected] = useState(false);
@@ -38,7 +38,7 @@ export function ChatComponent() {
   useEffect(() => {
     if (!user?.username) return;
 
-    const wsUrl = `${WS_BASE}/ws/chat/${user.username}`;
+    const wsUrl = `${WS_BASE}/ws/chat?token=${token}`;
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
