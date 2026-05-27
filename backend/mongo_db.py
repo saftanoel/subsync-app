@@ -10,7 +10,9 @@ import asyncio
 from datetime import datetime, timezone
 import motor.motor_asyncio
 
-MONGO_URL = "mongodb://localhost:27017"
+import os
+
+MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
 DB_NAME   = "subsync"
 
 
