@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from uuid import uuid4
 import asyncio
+from datetime import datetime, timezone
 
 from models import Subscription, SubscriptionCreate, SubscriptionUpdate, Payment
 from database import SessionLocal
@@ -86,8 +87,14 @@ class ChatConnectionManager:
         self.active_connections.remove(websocket)
 
     async def broadcast(self, message: dict):
+        dead_connections = []
         for connection in self.active_connections:
-            await connection.send_json(message)
+            try:
+                await connection.send_json(message)
+            except Exception:
+                dead_connections.append(connection)
+        for dead in dead_connections:
+            self.disconnect(dead)
 
 
 chat_manager = ChatConnectionManager()
@@ -123,11 +130,10 @@ async def chat_endpoint(websocket: WebSocket, token: str = Query(...)):
                 saved_msg = await insert_message(sender_username=username, text=data)
             except Exception as e:
                 print(f"MongoDB insert error: {e}")
-                import datetime
                 saved_msg = {
                     "sender_username": username,
                     "text": data,
-                    "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
 
             try:

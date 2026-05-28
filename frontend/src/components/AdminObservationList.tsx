@@ -3,6 +3,7 @@ import { AlertCircle, ShieldAlert, Clock, UserX } from "lucide-react";
 import { motion } from "framer-motion";
 import { API_BASE } from "@/config/api";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 interface FlaggedUser {
   _id: string;
@@ -12,6 +13,7 @@ interface FlaggedUser {
 }
 
 export function AdminObservationList() {
+  const { token } = useAuth();
   const [flaggedUsers, setFlaggedUsers] = useState<FlaggedUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -21,7 +23,8 @@ export function AdminObservationList() {
         // AICI ESTE MAGIA: Header-ul care îi spune lui Ngrok să ne lase să trecem
         const res = await fetch(`${API_BASE}/admin/flagged-users`, {
           headers: {
-            "ngrok-skip-browser-warning": "69420"
+            "ngrok-skip-browser-warning": "69420",
+            "Authorization": `Bearer ${token}`
           },
           cache: "no-store"
         });
