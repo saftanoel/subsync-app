@@ -106,20 +106,35 @@ async def chat_endpoint(websocket: WebSocket, token: str = Query(...)):
     await chat_manager.connect(websocket)
     try:
         # 1. Când se conectează un user, îi trimitem istoricul din MongoDB
-        history = await get_recent_messages()
-        for msg in history:
-            await websocket.send_json(msg)
+        try:
+            history = await get_recent_messages()
+            for msg in history:
+                await websocket.send_json(msg)
+        except Exception as e:
+            print(f"Failed to fetch history: {e}")
 
         # 2. Așteptăm mesaje noi de la acest user
         while True:
             # Primim textul de la client
             data = await websocket.receive_text()
 
-            # Salvăm mesajul în MongoDB
-            saved_msg = await insert_message(sender_username=username, text=data)
+            try:
+                # Salvăm mesajul în MongoDB
+                saved_msg = await insert_message(sender_username=username, text=data)
+            except Exception as e:
+                print(f"MongoDB insert error: {e}")
+                import datetime
+                saved_msg = {
+                    "sender_username": username,
+                    "text": data,
+                    "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
+                }
 
-            # Trimitem mesajul salvat tuturor userilor conectați
-            await chat_manager.broadcast(saved_msg)
+            try:
+                # Trimitem mesajul salvat tuturor userilor conectați
+                await chat_manager.broadcast(saved_msg)
+            except Exception as e:
+                print(f"Broadcast error: {e}")
 
     except WebSocketDisconnect:
         chat_manager.disconnect(websocket)
