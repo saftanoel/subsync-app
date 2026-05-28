@@ -8,8 +8,7 @@ import jwt
 import uuid
 import random
 import os
-import smtplib
-from email.mime.text import MIMEText
+import requests
 import typing
 
 from database import SessionLocal
@@ -23,23 +22,38 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def send_otp_email(to_email: str, otp_code: str):
-    smtp_email = os.environ.get("SMTP_EMAIL")
-    smtp_password = os.environ.get("SMTP_PASSWORD")
+    resend_api_key = os.environ.get("RESEND_API_KEY")
     
-    if not smtp_email or not smtp_password:
-        print("Warning: SMTP_EMAIL or SMTP_PASSWORD not set. Skipping real email send.")
+    if not resend_api_key:
+        print("Warning: RESEND_API_KEY not set. Skipping real email send.")
         return
 
-    msg = MIMEText(f"Your SubSync verification code is: {otp_code}")
-    msg["Subject"] = "SubSync Login Verification Code"
-    msg["From"] = smtp_email
-    msg["To"] = to_email
+    payload = {
+        "from": "onboarding@resend.dev",
+        "to": to_email,
+        "subject": "SubSync 3FA - Your Login Code",
+        "html": f"<p>Your security code is: <strong>{otp_code}</strong>. Please enter this in the application.</p>"
+    }
+    headers = {
+        "Authorization": f"Bearer {resend_api_key}",
+        "Content-Type": "application/json"
+    }
 
-    server = smtplib.SMTP("smtp.gmail.com", 587, timeout=5)
-    server.starttls()
-    server.login(smtp_email, smtp_password)
-    server.send_message(msg)
-    server.quit()
+    try:
+        response = requests.post(
+            "https://api.resend.com/emails",
+            json=payload,
+            headers=headers,
+            timeout=10
+        )
+        response.raise_for_status()
+    except Exception as e:
+        print(f"Resend API failed: {e}")
+        # The parent try-except block in /login will catch this if we re-raise it,
+        # but to match the previous graceful degradation, we can just print and pass
+        # so the mock email is used. Wait, the user asked to fallback to printing.
+        # It's already printed before calling this function in auth.py!
+        pass
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 router = APIRouter(tags=["Auth"])
