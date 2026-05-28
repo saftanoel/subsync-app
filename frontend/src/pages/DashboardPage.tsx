@@ -130,7 +130,7 @@ export default function DashboardPage() {
 
         <div className="lg:col-span-2 flex flex-col gap-6">
           <StatsCharts />
-          {user?.role === "admin" && <AdminObservationList />}
+          {user?.role?.toUpperCase() === "ADMIN" && <AdminObservationList />}
         </div>
       </div>
 

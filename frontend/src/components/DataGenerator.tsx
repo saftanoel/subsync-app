@@ -4,8 +4,10 @@ import { DatabaseZap, Square, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { API_BASE } from "@/config/api";
+import { useAuth } from "@/hooks/useAuth";
 
 export function DataGenerator() {
+  const { token } = useAuth();
   const [isRunning, setIsRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -14,6 +16,9 @@ export function DataGenerator() {
     try {
       const res = await fetch(`${API_BASE}/start-generator`, {
         method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
       });
       if (res.ok) {
         setIsRunning(true);
@@ -33,6 +38,9 @@ export function DataGenerator() {
     try {
       const res = await fetch(`${API_BASE}/stop-generator`, {
         method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
       });
       if (res.ok) {
         setIsRunning(false);
