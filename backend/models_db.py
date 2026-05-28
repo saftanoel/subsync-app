@@ -56,6 +56,13 @@ class UserDB(Base):
     username: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
+    
+    # 3FA Fields
+    security_question: Mapped[str] = mapped_column(String, nullable=True) # set nullable=True initially to avoid constraint errors on old rows
+    security_answer: Mapped[str] = mapped_column(String, nullable=True)
+    is_email_verified: Mapped[bool] = mapped_column(Integer, default=False) # Boolean as Integer for SQLite compat
+    email_otp: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
     role_id: Mapped[Optional[str]] = mapped_column(String, ForeignKey("roles.id"), nullable=True)
 
     # Many-to-One: User belongs to one Role
