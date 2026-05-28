@@ -5,6 +5,8 @@ class UserCreate(BaseModel):
     username: str
     email: str
     password: str
+    security_question: str
+    security_answer: str
 
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -23,3 +25,11 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
+
+class VerifyOTPRequest(BaseModel):
+    temp_token: str
+    otp: str
+
+class VerifySecurityRequest(BaseModel):
+    temp_token: str
+    answer: str

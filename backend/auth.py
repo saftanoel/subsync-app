@@ -3,13 +3,15 @@ from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
+from jwt.exceptions import InvalidTokenError
 import jwt
 import uuid
+import random
 import typing
 
 from database import SessionLocal
 from models_db import UserDB, RoleDB
-from schemas import UserCreate, UserResponse, Token, ForgotPasswordRequest, ResetPasswordRequest
+from schemas import UserCreate, UserResponse, Token, ForgotPasswordRequest, ResetPasswordRequest, VerifyOTPRequest, VerifySecurityRequest
 
 SECRET_KEY = "your-secret-key-for-jwt-replace-in-production"
 ALGORITHM = "HS256"
@@ -86,12 +88,15 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
         db.refresh(role)
 
     hashed_password = get_password_hash(user_in.password)
+    hashed_security_answer = get_password_hash(user_in.security_answer)
     
     new_user: UserDB = UserDB(
         id=str(uuid.uuid4()),
         username=user_in.username,
         email=user_in.email,
         hashed_password=hashed_password,
+        security_question=user_in.security_question,
+        security_answer=hashed_security_answer,
         role_id=role.id
     )
     
@@ -106,7 +111,7 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
         role=str(role.name)
     )
 
-@router.post("/login", response_model=Token)
+@router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(UserDB).filter(UserDB.username == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
@@ -116,6 +121,67 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    # 3FA Step 1 completed. Generate OTP and save it
+    otp = str(random.randint(100000, 999999))
+    user.email_otp = otp
+    db.commit()
+    
+    print(f"\n[MOCK EMAIL] OTP for {user.username} is: {otp}\n")
+    
+    temp_token = create_access_token(
+        data={"sub": str(user.username), "step": 1}, expires_delta=timedelta(minutes=15)
+    )
+    
+    return {
+        "status": "needs_email_verification",
+        "temp_token": temp_token
+    }
+
+@router.post("/verify-email")
+def verify_email(req: VerifyOTPRequest, db: Session = Depends(get_db)):
+    try:
+        payload = jwt.decode(req.temp_token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        step: int = payload.get("step")
+        if not username or step != 1:
+            raise HTTPException(status_code=400, detail="Invalid token step")
+    except InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    user = db.query(UserDB).filter(UserDB.username == username).first()
+    if not user or user.email_otp != req.otp:
+        raise HTTPException(status_code=400, detail="Invalid OTP")
+        
+    user.email_otp = None
+    user.is_email_verified = True
+    db.commit()
+    
+    next_token = create_access_token(
+        data={"sub": str(user.username), "step": 2}, expires_delta=timedelta(minutes=15)
+    )
+    
+    return {
+        "status": "needs_security_question",
+        "question": user.security_question,
+        "temp_token": next_token
+    }
+
+@router.post("/verify-security", response_model=Token)
+def verify_security(req: VerifySecurityRequest, db: Session = Depends(get_db)):
+    try:
+        payload = jwt.decode(req.temp_token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        step: int = payload.get("step")
+        if not username or step != 2:
+            raise HTTPException(status_code=400, detail="Invalid token step")
+    except InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    user = db.query(UserDB).filter(UserDB.username == username).first()
+    if not user or not verify_password(req.answer, user.security_answer):
+        raise HTTPException(status_code=400, detail="Incorrect security answer")
+
+    # 3FA Complete, return actual token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     role_name = str(user.role.name) if user.role else "USER"
     access_token = create_access_token(

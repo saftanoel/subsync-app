@@ -15,9 +15,8 @@ export interface AuthContextType {
   user:            User | null;
   token:           string | null;
   isAuthenticated: boolean;
-  login:           (username: string, password: string) => Promise<boolean>;
   logout:          () => void;
-  register:        (name: string, email: string, password: string) => Promise<boolean>;
+  setSession:      (token: string) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
