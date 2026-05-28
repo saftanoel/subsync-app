@@ -1,7 +1,6 @@
 # 🔄 SubSync
 
 > **Course Assignment:** MPP (Systems/Software Engineering)
-> **Status:** 🥇 Assignment 3 - Gold Challenge Completed 🏆
 
 SubSync is a modern, full-stack web application designed to help users manage their monthly and annual subscriptions, track expenses, and view insightful charts. The project features a robust React frontend and a FastAPI backend, utilizing a hybrid database architecture (SQLite + MongoDB), real-time WebSockets, and advanced security mechanisms.
 
@@ -9,10 +8,17 @@ SubSync is a modern, full-stack web application designed to help users manage th
 
 The application has been successfully migrated from in-memory mock data to a robust, production-ready persistence layer, achieving all requirements for the Assignment 3 **Bronze**, **Silver**, and **Gold** challenges:
 
+### 🛡️ Advanced Security & 3-Step Authentication (3FA)
+Implemented a strict, multi-stage login flow to ensure maximum account security:
+1. **Credentials:** Standard email and password validation.
+2. **Email Verification (OTP):** A dynamically generated 6-digit OTP is sent via a live SMTP integration directly to the user's registered email address.
+3. **Security Question:** Users must answer a personal security question (e.g., childhood nickname) configured during registration. Answers are cryptographically hashed before being stored in MongoDB.
+
 ### 🥇 Gold Challenge (Security & Anomaly Detection)
 - **Audit Logging:** Every critical action (e.g., deleting a subscription) is intercepted and logged immutably into a MongoDB `audit_logs` collection.
 - **Automated Anomaly Detection:** An asynchronous security algorithm monitors user behavior. If a user performs bulk deletions (3+ deletes within 10 seconds), they are automatically flagged.
 - **Admin Observation Dashboard:** A dedicated, visually distinct UI component (`AdminObservationList`) fetches flagged users in real-time. This component uses conditional rendering and is strictly visible only to authenticated Administrators.
+- **Fail-Safe Architecture:** The MongoDB data layer is fortified with strict `serverSelectionTimeoutMS` configurations and graceful error handling to prevent server lockups during network failures.
 
 ### 🥈 Silver Challenge (RBAC & Real-Time NoSQL Chat)
 - **Role-Based Access Control (RBAC):** Users are now authenticated against a relational SQLite database. Users are mapped to specific roles (`admin`, `user`) with inherited permissions. 
@@ -45,5 +51,6 @@ The application has been successfully migrated from in-memory mock data to a rob
 - **Relational Database:** SQLite3 + SQLAlchemy (ORM) + Alembic (Migrations)
 - **NoSQL Database:** MongoDB + Motor (Async Driver)
 - **Real-Time:** WebSockets (`websockets` library)
+- **Email/SMTP:** Python `smtplib` + `email.mime`
 - **API Architecture:** REST + GraphQL (Strawberry)
 - **Testing:** pytest
