@@ -152,7 +152,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     print(f"\n[MOCK EMAIL] OTP for {user.username} is: {otp}\n")
     
     try:
-        send_otp_email(user.email, otp)
+        send_otp_email(str(user.email), otp)
     except Exception as e:
         print(f"Failed to send OTP email (check firewall or credentials): {e}")
         # We don't raise a 500 error here. We want to allow the user to still test
