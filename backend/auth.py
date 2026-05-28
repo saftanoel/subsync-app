@@ -171,8 +171,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 def verify_email(req: VerifyOTPRequest, db: Session = Depends(get_db)):
     try:
         payload = jwt.decode(req.temp_token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        step: int = payload.get("step")
+        username = payload.get("sub")
+        step = payload.get("step")
         if not username or step != 1:
             raise HTTPException(status_code=400, detail="Invalid token step")
     except InvalidTokenError:
@@ -200,8 +200,8 @@ def verify_email(req: VerifyOTPRequest, db: Session = Depends(get_db)):
 def verify_security(req: VerifySecurityRequest, db: Session = Depends(get_db)):
     try:
         payload = jwt.decode(req.temp_token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        step: int = payload.get("step")
+        username = payload.get("sub")
+        step = payload.get("step")
         if not username or step != 2:
             raise HTTPException(status_code=400, detail="Invalid token step")
     except InvalidTokenError:
