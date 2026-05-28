@@ -23,11 +23,11 @@ def get_db():
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
-        client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URL, tlsAllowInvalidCertificates=True)
+        client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URL, tlsAllowInvalidCertificates=True, serverSelectionTimeoutMS=5000)
         return client[DB_NAME]
         
     if loop not in _clients:
-        _clients[loop] = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URL, tlsAllowInvalidCertificates=True)
+        _clients[loop] = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URL, tlsAllowInvalidCertificates=True, serverSelectionTimeoutMS=5000)
     return _clients[loop][DB_NAME]
 
 
