@@ -7,6 +7,9 @@ from jwt.exceptions import InvalidTokenError
 import jwt
 import uuid
 import random
+import os
+import smtplib
+from email.mime.text import MIMEText
 import typing
 
 from database import SessionLocal
@@ -18,6 +21,26 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def send_otp_email(to_email: str, otp_code: str):
+    smtp_email = os.environ.get("SMTP_EMAIL")
+    smtp_password = os.environ.get("SMTP_PASSWORD")
+    
+    if not smtp_email or not smtp_password:
+        print("Warning: SMTP_EMAIL or SMTP_PASSWORD not set. Skipping real email send.")
+        return
+
+    msg = MIMEText(f"Your SubSync verification code is: {otp_code}")
+    msg["Subject"] = "SubSync Login Verification Code"
+    msg["From"] = smtp_email
+    msg["To"] = to_email
+
+    server = smtplib.SMTP("smtp.gmail.com", 587)
+    server.starttls()
+    server.login(smtp_email, smtp_password)
+    server.send_message(msg)
+    server.quit()
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 router = APIRouter(tags=["Auth"])
 
@@ -127,6 +150,15 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     db.commit()
     
     print(f"\n[MOCK EMAIL] OTP for {user.username} is: {otp}\n")
+    
+    try:
+        send_otp_email(user.email, otp)
+    except Exception as e:
+        print(f"Failed to send OTP email: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send OTP email"
+        )
     
     temp_token = create_access_token(
         data={"sub": str(user.username), "step": 1}, expires_delta=timedelta(minutes=15)
