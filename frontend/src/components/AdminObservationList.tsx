@@ -16,6 +16,7 @@ export function AdminObservationList() {
   const { token } = useAuth();
   const [flaggedUsers, setFlaggedUsers] = useState<FlaggedUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchFlaggedUsers = async () => {
@@ -32,11 +33,12 @@ export function AdminObservationList() {
         if (res.ok) {
           const data = await res.json();
           setFlaggedUsers(data);
+          setError(null);
         } else {
-          console.error("Failed to fetch flagged users");
+          setError(`Error ${res.status}: Failed to fetch flagged users`);
         }
-      } catch (error) {
-        console.error("Error fetching flagged users:", error);
+      } catch (err: any) {
+        setError(err.message || "Network error while fetching logs");
       } finally {
         setIsLoading(false);
       }
@@ -62,6 +64,12 @@ export function AdminObservationList() {
           <div className={cn('flex', 'flex-col', 'items-center', 'justify-center', 'py-8', 'text-muted-foreground', 'animate-pulse')}>
             <div className={cn('h-6', 'w-6', 'border-2', 'border-destructive', 'border-t-transparent', 'rounded-full', 'animate-spin', 'mb-2')}></div>
             <p className="text-sm">Loading security logs...</p>
+          </div>
+        ) : error ? (
+          <div className={cn('flex', 'flex-col', 'items-center', 'justify-center', 'py-8', 'text-destructive')}>
+            <AlertCircle className={cn('h-10', 'w-10', 'mb-3')} />
+            <p className={cn('text-sm', 'font-medium')}>Failed to load</p>
+            <p className="text-xs opacity-80">{error}</p>
           </div>
         ) : flaggedUsers.length === 0 ? (
           <div className={cn('flex', 'flex-col', 'items-center', 'justify-center', 'py-8', 'text-muted-foreground')}>
