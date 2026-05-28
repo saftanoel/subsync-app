@@ -119,6 +119,8 @@ async def chat_endpoint(websocket: WebSocket, token: str = Query(...)):
                 await websocket.send_json(msg)
         except Exception as e:
             print(f"Failed to fetch history: {e}")
+            await websocket.close(code=1011, reason=str(e)[:100])
+            return
 
         # 2. Așteptăm mesaje noi de la acest user
         while True:
@@ -136,6 +138,8 @@ async def chat_endpoint(websocket: WebSocket, token: str = Query(...)):
                 raise
             except Exception as e:
                 print(f"WS Error: {e}")
+                await websocket.close(code=1011, reason=str(e)[:100])
+                break
 
     except WebSocketDisconnect:
         chat_manager.disconnect(websocket)
@@ -224,7 +228,10 @@ async def delete_subscription(sub_id: str, current_user: UserDB = Depends(get_cu
 @app.get("/admin/flagged-users")
 async def get_flagged_users(current_user: UserDB = Depends(get_admin_user)):
     """Retrieve all flagged users from MongoDB (Gold Challenge)."""
-    return await get_all_flagged_users()
+    try:
+        return await get_all_flagged_users()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database connection error: {str(e)}")
 
 
 # graphql endpoint
