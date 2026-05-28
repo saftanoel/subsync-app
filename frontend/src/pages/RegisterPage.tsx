@@ -89,7 +89,19 @@ export default function RegisterPage() {
           
           <div className="space-y-2 pt-2 border-t border-border/50">
             <Label htmlFor="securityQuestion">Security Question</Label>
-            <Input id="securityQuestion" type="text" value={securityQuestion} onChange={e => setSecurityQuestion(e.target.value)} placeholder="What was your childhood nickname?" className="bg-secondary/50 border-border" disabled={isLoading} />
+            <select
+              id="securityQuestion"
+              value={securityQuestion}
+              onChange={e => setSecurityQuestion(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-secondary/50 px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={isLoading}
+            >
+              <option value="What was your childhood nickname?">What was your childhood nickname?</option>
+              <option value="What is the name of your favorite pet?">What is the name of your favorite pet?</option>
+              <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+              <option value="What city were you born in?">What city were you born in?</option>
+              <option value="What was the name of your first school?">What was the name of your first school?</option>
+            </select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="securityAnswer">Security Answer</Label>
