@@ -41,7 +41,10 @@ export default function LoginPage() {
         body: formData,
       });
 
-      if (!res.ok) throw new Error("Invalid username or password");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || "Invalid username or password");
+      }
       
       const data = await res.json();
       if (data.status === "needs_email_verification") {

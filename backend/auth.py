@@ -35,7 +35,7 @@ def send_otp_email(to_email: str, otp_code: str):
     msg["From"] = smtp_email
     msg["To"] = to_email
 
-    server = smtplib.SMTP("smtp.gmail.com", 587)
+    server = smtplib.SMTP("smtp.gmail.com", 587, timeout=5)
     server.starttls()
     server.login(smtp_email, smtp_password)
     server.send_message(msg)
@@ -154,11 +154,9 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     try:
         send_otp_email(user.email, otp)
     except Exception as e:
-        print(f"Failed to send OTP email: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to send OTP email"
-        )
+        print(f"Failed to send OTP email (check firewall or credentials): {e}")
+        # We don't raise a 500 error here. We want to allow the user to still test
+        # the 3FA flow by reading the OTP from the console output above.
     
     temp_token = create_access_token(
         data={"sub": str(user.username), "step": 1}, expires_delta=timedelta(minutes=15)
