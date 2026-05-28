@@ -104,8 +104,8 @@ chat_manager = ChatConnectionManager()
 async def chat_endpoint(websocket: WebSocket, token: str = Query(...)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
+        username = payload.get("sub")
+        if not username or not isinstance(username, str):
             raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
     except jwt.InvalidTokenError:
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
