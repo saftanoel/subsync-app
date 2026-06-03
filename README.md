@@ -1,17 +1,28 @@
 # 🔄 SubSync
 
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
+![GraphQL](https://img.shields.io/badge/-GraphQL-E10098?style=for-the-badge&logo=graphql&logoColor=white)
+![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
+![Vercel](https://img.shields.io/badge/vercel-%23000000.svg?style=for-the-badge&logo=vercel&logoColor=white)
+![Render](https://img.shields.io/badge/Render-%2346E3B7.svg?style=for-the-badge&logo=render&logoColor=white)
+
 > **Course Assignment:** MPP (Systems/Software Engineering)
+> **Status:** 🥇 Assignment 3 & 4 - Security, Hybrid DBs & Cloud Deployment 🏆
 
 SubSync is a modern, full-stack web application designed to help users manage their monthly and annual subscriptions, track expenses, and view insightful charts. The project features a robust React frontend and a FastAPI backend, utilizing a hybrid database architecture (SQLite + MongoDB), real-time WebSockets, and advanced security mechanisms.
 
-## ✨ Assignment 3: Hybrid Databases & Security (NEW)
+## ✨ Assignment 3 & 4: Hybrid Databases, Security & Cloud
 
-The application has been successfully migrated from in-memory mock data to a robust, production-ready persistence layer, achieving all requirements for the Assignment 3 **Bronze**, **Silver**, and **Gold** challenges:
+The application has been successfully migrated from in-memory mock data to a robust, production-ready persistence layer and deployed to the cloud, achieving all requirements for the Assignment **Bronze**, **Silver**, and **Gold** challenges:
 
 ### 🛡️ Advanced Security & 3-Step Authentication (3FA)
 Implemented a strict, multi-stage login flow to ensure maximum account security:
 1. **Credentials:** Standard email and password validation.
-2. **Email Verification (OTP):** A dynamically generated 6-digit OTP is sent via a live SMTP integration directly to the user's registered email address.
+2. **Email Verification (OTP):** A dynamically generated 6-digit OTP is sent via the **Resend HTTP API** directly to the user's registered email address, bypassing strict cloud port limitations.
 3. **Security Question:** Users must answer a personal security question (e.g., childhood nickname) configured during registration. Answers are cryptographically hashed before being stored in MongoDB.
 
 ### 🥇 Gold Challenge (Security & Anomaly Detection)
@@ -51,6 +62,11 @@ Implemented a strict, multi-stage login flow to ensure maximum account security:
 - **Relational Database:** SQLite3 + SQLAlchemy (ORM) + Alembic (Migrations)
 - **NoSQL Database:** MongoDB + Motor (Async Driver)
 - **Real-Time:** WebSockets (`websockets` library)
-- **Email/SMTP:** Python `smtplib` + `email.mime`
+- **Email API:** Resend HTTP API (via `httpx`/`requests`)
 - **API Architecture:** REST + GraphQL (Strawberry)
 - **Testing:** pytest
+
+### Cloud & Deployment
+- **Frontend Hosting:** Vercel (CI/CD Pipeline)
+- **Backend Hosting:** Render Web Services
+- **Database Hosting:** MongoDB Atlas
