@@ -49,7 +49,7 @@ export function Navbar() {
           </a>
         </motion.div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-2 sm:gap-4 md:gap-6 flex-shrink-0">
 
           {/* Butonul de Dark / Light Mode */}
           <ThemeToggle />

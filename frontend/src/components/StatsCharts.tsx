@@ -92,18 +92,22 @@ export function StatsCharts() {
             <p className="text-xs text-muted-foreground">Total due this week: ${totalWeekly.toFixed(2)}</p>
           </div>
         </div>
-        <ResponsiveContainer width="100%" height={180}>
-          <BarChart data={weeklyData}>
-            <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(215, 12%, 55%)" }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: "hsl(215, 12%, 55%)" }} axisLine={false} tickLine={false} />
-            <Tooltip
-              contentStyle={{ background: "hsl(220, 18%, 12%)", border: "1px solid hsl(220, 14%, 22%)", borderRadius: "8px", fontSize: "12px" }}
-              itemStyle={{ color: "hsl(210, 20%, 95%)" }}
-              formatter={(value: number) => [`$${value}`, "Amount"]}
-            />
-            <Bar dataKey="amount" fill="hsl(200, 80%, 50%)" radius={[4, 4, 0, 0]} animationDuration={800} />
-          </BarChart>
-        </ResponsiveContainer>
+        <div className="w-full overflow-x-auto min-w-0">
+          <div className="min-w-[400px]">
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={weeklyData}>
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(215, 12%, 55%)" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: "hsl(215, 12%, 55%)" }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  contentStyle={{ background: "hsl(220, 18%, 12%)", border: "1px solid hsl(220, 14%, 22%)", borderRadius: "8px", fontSize: "12px" }}
+                  itemStyle={{ color: "hsl(210, 20%, 95%)" }}
+                  formatter={(value: number) => [`$${value}`, "Amount"]}
+                />
+                <Bar dataKey="amount" fill="hsl(200, 80%, 50%)" radius={[4, 4, 0, 0]} animationDuration={800} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </motion.div>
 
       {/* Value for money */}

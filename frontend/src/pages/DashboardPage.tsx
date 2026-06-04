@@ -62,7 +62,7 @@ export default function DashboardPage() {
         <DataGenerator />
       </div>
 
-      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((s, i) => (
           <motion.div
             key={s.label}
@@ -86,17 +86,17 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="font-display text-2xl font-bold">Your Subscriptions</h1>
-        <Button onClick={() => { setEditingSub(null); setShowForm(true); }} className="gradient-primary text-primary-foreground font-semibold glow-primary gap-2">
+        <Button onClick={() => { setEditingSub(null); setShowForm(true); }} className="gradient-primary text-primary-foreground font-semibold glow-primary gap-2 self-start sm:self-auto">
           <Plus className="h-4 w-4" /> Add Subscription
         </Button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-5">
+      <div className="grid gap-6 lg:grid-cols-5 min-w-0 w-full">
         
         {/* ZONA DE TABEL + BUTON DE LOAD MORE */}
-        <div className="lg:col-span-3 flex flex-col gap-4">
+        <div className="lg:col-span-3 flex flex-col gap-4 min-w-0 w-full overflow-x-auto">
           <SubscriptionTable
             onEdit={(sub) => { setEditingSub(sub); setShowForm(true); }}
             onSelect={setSelectedSub}
@@ -128,7 +128,7 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="lg:col-span-2 flex flex-col gap-6">
+        <div className="lg:col-span-2 flex flex-col gap-6 min-w-0 w-full">
           <StatsCharts />
           {user?.role?.toUpperCase() === "ADMIN" && <AdminObservationList />}
         </div>
