@@ -1,6 +1,7 @@
 # data validation (database constraints)
 from typing import List, Optional
-from sqlalchemy import Column, String, Float, Integer, ForeignKey, Table
+from datetime import datetime
+from sqlalchemy import Column, String, Float, Integer, ForeignKey, Table, DateTime
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from database import Base
 
@@ -62,6 +63,8 @@ class UserDB(Base):
     security_answer: Mapped[str] = mapped_column(String, nullable=True)
     is_email_verified: Mapped[bool] = mapped_column(Integer, default=False) # Boolean as Integer for SQLite compat
     email_otp: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    reset_token: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    reset_token_expiry: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     role_id: Mapped[Optional[str]] = mapped_column(String, ForeignKey("roles.id"), nullable=True)
 

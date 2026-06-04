@@ -14,13 +14,14 @@ export default function LoginPage() {
   const navigate = useNavigate();
   
   // Step state
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | "forgot">(1);
   const [isLoading, setIsLoading] = useState(false);
   const [tempToken, setTempToken] = useState("");
   
   // Form fields
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [forgotEmail, setForgotEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [securityQuestion, setSecurityQuestion] = useState("");
   const [securityAnswer, setSecurityAnswer] = useState("");
@@ -54,6 +55,29 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       toast.error(err.message || "Login failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail) { toast.error("Email is required."); return; }
+    
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+
+      if (!res.ok) throw new Error("Request failed");
+      
+      toast.success("If an account exists, a reset link has been sent to your email.");
+      setStep(1);
+    } catch (err: any) {
+      toast.error(err.message || "Request failed");
     } finally {
       setIsLoading(false);
     }
@@ -141,12 +165,40 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
+                    <button type="button" onClick={() => setStep("forgot")} className="text-sm font-medium text-primary hover:underline" disabled={isLoading}>Forgot password?</button>
                   </div>
                   <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="bg-secondary/50 border-border" disabled={isLoading} />
                 </div>
                 <Button type="submit" className="w-full mt-6" disabled={isLoading}>
                   {isLoading ? "Verifying..." : "Sign In"}
                 </Button>
+              </form>
+            </motion.div>
+          )}
+
+          {step === "forgot" && (
+            <motion.div key="forgot" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+              <div className="mb-8 flex flex-col items-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl gradient-primary mb-3">
+                  <KeyRound className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <h1 className="font-display text-2xl font-bold">Reset Password</h1>
+                <p className="mt-1 text-sm text-muted-foreground">Enter your email to receive a reset link</p>
+              </div>
+
+              <form onSubmit={handleForgot} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="forgotEmail">Email</Label>
+                  <Input id="forgotEmail" type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} placeholder="you@example.com" className="bg-secondary/50 border-border" disabled={isLoading} />
+                </div>
+                <Button type="submit" className="w-full mt-6" disabled={isLoading}>
+                  {isLoading ? "Sending..." : "Send Reset Link"}
+                </Button>
+                <div className="mt-4 text-center">
+                  <button type="button" onClick={() => setStep(1)} className="text-sm font-medium text-muted-foreground hover:text-primary" disabled={isLoading}>
+                    Back to login
+                  </button>
+                </div>
               </form>
             </motion.div>
           )}

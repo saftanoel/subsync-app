@@ -13,6 +13,7 @@ import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import DashboardPage from "@/pages/DashboardPage";
 import NotFound from "@/pages/NotFound";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import { AnimatePresence } from "framer-motion";
 import { InitialLoader } from "@/components/InitialLoader";
 
@@ -30,6 +31,7 @@ function AppRoutes() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>

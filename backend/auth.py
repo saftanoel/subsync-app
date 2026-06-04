@@ -10,6 +10,7 @@ import random
 import os
 import requests
 import typing
+import secrets
 
 from database import SessionLocal
 from models_db import UserDB, RoleDB
@@ -53,6 +54,37 @@ def send_otp_email(to_email: str, otp_code: str):
         # but to match the previous graceful degradation, we can just print and pass
         # so the mock email is used. Wait, the user asked to fallback to printing.
         # It's already printed before calling this function in auth.py!
+        pass
+
+def send_reset_email(to_email: str, token: str):
+    resend_api_key = os.environ.get("RESEND_API_KEY")
+    
+    if not resend_api_key:
+        print("Warning: RESEND_API_KEY not set. Skipping real email send.")
+        return
+
+    reset_url = f"http://localhost:5173/reset-password?token={token}"
+    payload = {
+        "from": "onboarding@resend.dev",
+        "to": to_email,
+        "subject": "SubSync - Reset Your Password",
+        "html": f"<p>You requested a password reset. Click the link below to set a new password:</p><p><a href='{reset_url}'>{reset_url}</a></p><p>This link will expire in 15 minutes.</p>"
+    }
+    headers = {
+        "Authorization": f"Bearer {resend_api_key}",
+        "Content-Type": "application/json"
+    }
+
+    try:
+        response = requests.post(
+            "https://api.resend.com/emails",
+            json=payload,
+            headers=headers,
+            timeout=10
+        )
+        response.raise_for_status()
+    except Exception as e:
+        print(f"Resend API failed: {e}")
         pass
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -241,30 +273,33 @@ def verify_security(req: VerifySecurityRequest, db: Session = Depends(get_db)):
 def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
     user = db.query(UserDB).filter(UserDB.email == req.email).first()
     if user:
-        reset_token = create_access_token(
-            data={"sub": str(user.username), "type": "password_reset"}, 
-            expires_delta=timedelta(minutes=15)
-        )
-        print(f"MOCK EMAIL: To reset your password, use this token: {reset_token}")
+        reset_token = secrets.token_urlsafe(32)
+        user.reset_token = reset_token
+        user.reset_token_expiry = datetime.now(timezone.utc) + timedelta(minutes=15)
+        db.commit()
         
+        reset_url = f"http://localhost:5173/reset-password?token={reset_token}"
+        print(f"\n[MOCK EMAIL] To reset your password, visit: {reset_url}\n")
+        
+        try:
+            send_reset_email(str(user.email), reset_token)
+        except Exception as e:
+            print(f"Failed to send reset email: {e}")
+            
     return {"message": "If an account with that email exists, a password reset link has been sent."}
 
 @router.post("/reset-password")
 def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
-    try:
-        payload = jwt.decode(req.token, SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("sub")
-        token_type = payload.get("type")
-        if not username or not isinstance(username, str) or token_type != "password_reset":
-            raise HTTPException(status_code=400, detail="Invalid or expired reset token")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
-        
-    user = db.query(UserDB).filter(UserDB.username == username).first()
+    user = db.query(UserDB).filter(UserDB.reset_token == req.token).first()
     if not user:
         raise HTTPException(status_code=400, detail="Invalid or expired reset token")
         
+    if not user.reset_token_expiry or user.reset_token_expiry.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+        
     user.hashed_password = get_password_hash(req.new_password)
+    user.reset_token = None
+    user.reset_token_expiry = None
     db.commit()
     
     return {"message": "Password has been successfully reset"}
