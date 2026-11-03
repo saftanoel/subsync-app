@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Monitor, KeyRound, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { API_BASE } from "@/config/api";
+import { getErrorMessage } from "@/lib/errorMessage";
 
 export default function LoginPage() {
   const { setSession } = useAuth();
@@ -53,8 +54,8 @@ export default function LoginPage() {
         setStep(2);
         toast.info("Check your email for the OTP");
       }
-    } catch (err: any) {
-      toast.error(err.message || "Login failed");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Login failed"));
     } finally {
       setIsLoading(false);
     }
@@ -76,8 +77,8 @@ export default function LoginPage() {
       
       toast.success("If an account exists, a reset link has been sent to your email.");
       setStep(1);
-    } catch (err: any) {
-      toast.error(err.message || "Request failed");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Request failed"));
     } finally {
       setIsLoading(false);
     }
@@ -104,8 +105,8 @@ export default function LoginPage() {
         setStep(3);
         toast.info("Answer your security question");
       }
-    } catch (err: any) {
-      toast.error(err.message || "OTP Verification failed");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "OTP Verification failed"));
     } finally {
       setIsLoading(false);
     }
@@ -131,8 +132,8 @@ export default function LoginPage() {
         toast.success("Welcome back!");
         navigate("/dashboard");
       }
-    } catch (err: any) {
-      toast.error(err.message || "Security verification failed");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Security verification failed"));
     } finally {
       setIsLoading(false);
     }

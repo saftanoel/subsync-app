@@ -74,7 +74,7 @@ export function ChatComponent() {
       ws.close();
       wsRef.current = null;
     };
-  }, [user?.username]);
+  }, [token, user?.username]);
 
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault();

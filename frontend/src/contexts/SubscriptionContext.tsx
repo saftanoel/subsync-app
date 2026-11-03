@@ -203,7 +203,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     };
   }, [syncWithServer]);
 
-  
+  // Crud operations for subscriptions
   const addSubscription = useCallback(async (sub: Omit<Subscription, "id">) => {
     try {
       if (isOnline) {

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { API_BASE } from "@/config/api";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { getErrorMessage } from "@/lib/errorMessage";
 
 interface FlaggedUser {
   _id: string;
@@ -37,15 +38,15 @@ export function AdminObservationList() {
         } else {
           setError(`Error ${res.status}: Failed to fetch flagged users`);
         }
-      } catch (err: any) {
-        setError(err.message || "Network error while fetching logs");
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, "Network error while fetching logs"));
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchFlaggedUsers();
-  }, []);
+  }, [token]);
 
   return (
     <div className={cn('glass', 'rounded-xl', 'border', 'border-destructive/50', 'bg-destructive/5', 'shadow-sm', 'overflow-hidden', 'mt-6')}>

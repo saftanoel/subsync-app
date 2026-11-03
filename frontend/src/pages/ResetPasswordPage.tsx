@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { API_BASE } from "@/config/api";
+import { getErrorMessage } from "@/lib/errorMessage";
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -44,8 +45,8 @@ export default function ResetPasswordPage() {
       
       toast.success("Password reset successfully! Please login with your new password.");
       navigate("/login");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to reset password");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Failed to reset password"));
     } finally {
       setIsLoading(false);
     }
